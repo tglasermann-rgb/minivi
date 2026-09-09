@@ -14,7 +14,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "build:vercel": "prisma generate && prisma migrate deploy && next build"
+    "build:vercel": "node scripts/check-env.mjs && prisma generate && prisma migrate deploy && next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

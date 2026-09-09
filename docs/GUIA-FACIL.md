@@ -20,9 +20,9 @@ Abrí tu proyecto en https://supabase.com/dashboard y dejá abierto un bloc de n
 
 ### 1b. Las dos direcciones de la base de datos
 1. Arriba de la pantalla, hacé clic en el botón **Connect**.
-2. Buscá la sección **Transaction pooler**. Copiá esa dirección larga que empieza con `postgresql://`. Es la número 1.
-3. Buscá la sección **Session pooler**. Copiá esa dirección. Es la número 2.
-4. Las dos tienen escrito `[YOUR-PASSWORD]` en el medio. Borrá eso (con los corchetes) y escribí ahí la contraseña de la base de datos que pusiste cuando creaste el proyecto.
+2. Hacé clic en la pestaña **Direct** (Connection string).
+3. En **Connection Method** elegí **Session pooler**. Copiá la dirección larga que empieza con `postgresql://` y dice `pooler.supabase.com:5432`.
+4. Tiene escrito `[YOUR-PASSWORD]` en el medio. Borrá eso (con los corchetes) y escribí ahí la contraseña de la base de datos que pusiste cuando creaste el proyecto.
    - ¿No la anotaste? Engranaje → **Database** → botón **Reset database password**. Te da una nueva. Guardala.
 
 ### 1c. Crear tu usuario para entrar al portal
@@ -60,9 +60,11 @@ En esa misma pantalla, abrí la sección **Environment Variables**. Vas a cargar
 | `NEXT_PUBLIC_SUPABASE_URL` | la Project URL del paso 1a |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | la clave anon / publishable del paso 1a |
 | `SUPABASE_SERVICE_ROLE_KEY` | la clave service_role / secret del paso 1a |
-| `DATABASE_URL` | la dirección número 1 (Transaction pooler) con tu contraseña |
-| `DIRECT_URL` | la dirección número 2 (Session pooler) con tu contraseña |
+| `DATABASE_URL` | la dirección Session pooler con tu contraseña |
+| `DIRECT_URL` | exactamente la misma dirección |
 | `OWNER_EMAILS` | tu email y el de Nissim, separados por coma, sin espacios. Ejemplo: `tomas@gmail.com,nissim@gmail.com` |
+
+**Importante:** en cada renglón, fijate que las casillas de entorno (**Production**, **Preview** y **Development**) estén las tres marcadas. Si solo está una, el portal va a fallar en algunos deploys.
 
 Cuando estén los 6, hacé clic en **Deploy**.
 
