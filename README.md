@@ -28,7 +28,7 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 
 ## Cómo probar la fase 0
 
-1. Seguir [`docs/SETUP.md`](docs/SETUP.md): proyecto de Supabase, `.env.local`, `npm run db:deploy`, crear tu usuario en Supabase con tu email en `OWNER_EMAILS`.
+1. Sin instalar nada: seguir [`docs/GUIA-FACIL.md`](docs/GUIA-FACIL.md) (Supabase + Vercel). Con tu computadora: [`docs/SETUP.md`](docs/SETUP.md).
 2. `npm run dev` y abrir http://localhost:3000.
 3. Entrar con tu email y contraseña → tenés que ver `/app` con el menú (Inicio, Compras, Inventario, Ventas, Gastos, Empleados, Reportes, Configuración). Achicá la ventana o abrilo desde el celular: el menú pasa a un botón arriba a la izquierda.
 4. Ir a **Configuración**, cambiar el precio por gramo (por ejemplo 300 → 310) y guardar. Tiene que aparecer el aviso "Configuración guardada" y una fila nueva en "Historial de cambios" con tu email, el valor anterior y el nuevo. Volver a Inicio: el subtítulo muestra el precio nuevo.

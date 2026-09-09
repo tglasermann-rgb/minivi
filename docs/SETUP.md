@@ -42,9 +42,11 @@ Abrir http://localhost:3000 → redirige a `/login`. Entrar con un email de `OWN
 
 ## 5. Vercel
 
+Versión paso a paso sin comandos: [`docs/GUIA-FACIL.md`](GUIA-FACIL.md).
+
 1. Importar el repo de GitHub en Vercel (framework: Next.js, detectado solo).
 2. **Environment Variables**: cargar todas las de `.env.example`. `SUPABASE_SERVICE_ROLE_KEY` y `DATABASE_URL`/`DIRECT_URL` solo en el servidor (no llevan `NEXT_PUBLIC_`).
-3. El build corre `prisma generate && next build`. Las migraciones **no** se aplican en el build: correr `npm run db:deploy` desde tu máquina apuntando a producción cuando haya una migración nueva.
+3. El build en Vercel (`vercel.json` → `npm run build:vercel`) corre `prisma migrate deploy` antes de `next build`, así las migraciones nuevas se aplican solas en cada deploy. Necesita `DIRECT_URL`.
 4. En Supabase → **Authentication → URL Configuration**: agregar la URL de Vercel a "Site URL" y "Redirect URLs".
 
 ## Comprobaciones
