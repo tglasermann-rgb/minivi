@@ -24,7 +24,7 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 
 ## Estado
 
-**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista para probar (productos, SKU y precio automáticos, stock por movimientos, fotos desde Drive, etiquetas PDF, export CSV y publicación en Shopify).
+**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista para probar (proveedores, órdenes de compra en PDF, recepción que crea productos y stock, cuentas por pagar con alerta en Inicio, costo promedio por gramo en Reportes).
 
 ## Cómo probar la fase 0
 
@@ -45,6 +45,15 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 6. Con Drive configurado (`docs/SETUP-DRIVE.md`): poné una foto `MV-NK-0001.jpg` en la carpeta y apretá **Buscar fotos**.
 7. Con Shopify configurado (`docs/SETUP-SHOPIFY.md`): **Publicar en Shopify** → el producto aparece como borrador en el admin de Shopify con SKU, precio, costo, peso, tags y fotos.
 8. Configuración → cambiá el precio por gramo → **Recalcular precios**: los productos sin precio manual se actualizan y queda en el historial.
+
+## Cómo probar la fase 2
+
+1. Compras → **Proveedores** → **Nuevo proveedor**.
+2. Compras → **Nueva compra**: costo por gramo 100, condiciones 30/60/90, 20 líneas (o menos, con cantidad). Abajo se ven el total y las tres cuotas con fecha. Crear.
+3. En la ficha: **PDF** abre la orden con el logo para mandar al proveedor. **Estado → Pedida**.
+4. **Recibir mercadería**: confirmá las cantidades. Aparecen los SKU en cada línea; en Inventario están los productos con precio automático y stock. Probá recibir parcial primero (menos unidades) y después el resto.
+5. **Cuentas por pagar**: tres cuotas pendientes; marcá una como pagada. En Inicio aparecen las que vencen en 7 días.
+6. Reportes: costo promedio por gramo del inventario, ponderado por gramos.
 
 ## Estructura
 

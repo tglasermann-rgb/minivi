@@ -170,3 +170,101 @@ model SkuCounter {
 
   @@map("sku_counters")
 }
+
+// ---------------------------------------------------------------------------
+// Fase 2 — Compras
+// ---------------------------------------------------------------------------
+
+enum PurchaseStatus {
+  draft
+  ordered
+  received
+  closed
+}
+
+model Supplier {
+  id           String     @id @default(uuid()) @db.Uuid
+  name         String
+  contact      String?
+  paymentTerms String?    @map("payment_terms")
+  notes        String?
+  active       Boolean    @default(true)
+  purchases    Purchase[]
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy    String?    @map("created_by") @db.Uuid
+
+  @@map("suppliers")
+}
+
+model Purchase {
+  id               String         @id @default(uuid()) @db.Uuid
+  number           Int            @unique @default(autoincrement())
+  supplierId       String         @map("supplier_id") @db.Uuid
+  supplier         Supplier       @relation(fields: [supplierId], references: [id])
+  date             DateTime       @db.Date
+  invoiceNumber    String?        @map("invoice_number")
+  status           PurchaseStatus @default(draft)
+  costPerGramCents Int            @map("cost_per_gram_cents")
+  subtotalCents    Int            @default(0) @map("subtotal_cents")
+  taxCents         Int            @default(0) @map("tax_cents")
+  shippingCents    Int            @default(0) @map("shipping_cents")
+  totalCents       Int            @default(0) @map("total_cents")
+  /// contado | 30 | 30_60 | 30_60_90 | custom
+  paymentTerms     String         @default("contado") @map("payment_terms")
+  notes            String?
+  /// [{ path, name, size }] en el bucket privado purchase-docs
+  attachments      Json           @default("[]")
+  items            PurchaseItem[]
+  payables         Payable[]
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy        String?        @map("created_by") @db.Uuid
+
+  @@index([supplierId])
+  @@index([status])
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id               String      @id @default(uuid()) @db.Uuid
+  purchaseId       String      @map("purchase_id") @db.Uuid
+  purchase         Purchase    @relation(fields: [purchaseId], references: [id])
+  position         Int         @default(1)
+  description      String
+  type             ProductType
+  subcategory      String
+  karat            String      @default("14k")
+  grams            Decimal     @db.Decimal(8, 2)
+  qty              Int
+  qtyReceived      Int         @default(0) @map("qty_received")
+  unitCostCents    Int         @map("unit_cost_cents")
+  unitCostOverride Boolean     @default(false) @map("unit_cost_override")
+  optionName       String?     @map("option_name")
+  optionValue      String?     @map("option_value")
+  productId        String?     @map("product_id") @db.Uuid
+  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy        String?     @map("created_by") @db.Uuid
+
+  @@index([purchaseId])
+  @@map("purchase_items")
+}
+
+model Payable {
+  id          String    @id @default(uuid()) @db.Uuid
+  purchaseId  String    @map("purchase_id") @db.Uuid
+  purchase    Purchase  @relation(fields: [purchaseId], references: [id])
+  amountCents Int       @map("amount_cents")
+  dueOn       DateTime  @map("due_on") @db.Date
+  paidOn      DateTime? @map("paid_on") @db.Date
+  method      String?
+  note        String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?   @map("created_by") @db.Uuid
+
+  @@index([dueOn])
+  @@index([purchaseId])
+  @@map("payables")
+}

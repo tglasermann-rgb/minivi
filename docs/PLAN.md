@@ -8,7 +8,7 @@ Decisiones ya tomadas (no se vuelven a discutir): Shopify es la fuente de verdad
 |---|---|---|
 | 0 | Base del proyecto | ✅ Lista para probar |
 | 1 | Inventario, SKU, etiquetas y export | ✅ Lista para probar |
-| 2 | Compras | Pendiente |
+| 2 | Compras | ✅ Lista para probar |
 | 3 | Gastos | Pendiente |
 | 4 | Empleados, fichaje y nómina | Pendiente |
 | 5 | Ventas (Shopify web, POS y TikTok) | Pendiente |
@@ -50,7 +50,7 @@ Modelo: `products`, `product_images`, `stock_movements` (el stock es la suma de 
 
 **Entregable:** crear 5 productos, SKU y precio automáticos, fotos desde Drive, etiquetas impresas, publicados en Shopify como draft.
 
-## Fase 2 — Compras
+## Fase 2 — Compras ✅
 
 Modelo: `suppliers`, `purchases`, `purchase_items`, `payables`, adjuntos en bucket `purchase-docs`.
 
