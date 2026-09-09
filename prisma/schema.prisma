@@ -447,3 +447,103 @@ model PayPeriodLine {
   @@unique([payPeriodId, employeeId])
   @@map("pay_period_lines")
 }
+
+// ---------------------------------------------------------------------------
+// Fase 5 — Ventas (Shopify web, POS y TikTok)
+// ---------------------------------------------------------------------------
+
+enum SalesChannel {
+  web
+  pos
+  tiktok
+  other
+}
+
+model Customer {
+  id                String   @id @default(uuid()) @db.Uuid
+  shopifyCustomerId String   @unique @map("shopify_customer_id")
+  name              String?
+  email             String?
+  phone             String?
+  ordersCount       Int      @default(0) @map("orders_count")
+  totalSpentCents   Int      @default(0) @map("total_spent_cents")
+  orders            Order[]
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy         String?  @map("created_by") @db.Uuid
+
+  @@map("customers")
+}
+
+model Order {
+  id                String       @id @default(uuid()) @db.Uuid
+  shopifyOrderId    String       @unique @map("shopify_order_id")
+  orderNumber       String       @map("order_number")
+  channel           SalesChannel @default(other)
+  sourceName        String?      @map("source_name")
+  placedAt          DateTime     @map("placed_at") @db.Timestamptz(6)
+  customerId        String?      @map("customer_id") @db.Uuid
+  customer          Customer?    @relation(fields: [customerId], references: [id])
+  customerName      String?      @map("customer_name")
+  subtotalCents     Int          @default(0) @map("subtotal_cents")
+  taxCents          Int          @default(0) @map("tax_cents")
+  discountCents     Int          @default(0) @map("discount_cents")
+  shippingCents     Int          @default(0) @map("shipping_cents")
+  totalCents        Int          @default(0) @map("total_cents")
+  refundedCents     Int          @default(0) @map("refunded_cents")
+  paymentGateway    String?      @map("payment_gateway")
+  financialStatus   String?      @map("financial_status")
+  fulfillmentStatus String?      @map("fulfillment_status")
+  staffName         String?      @map("staff_name")
+  cancelledAt       DateTime?    @map("cancelled_at") @db.Timestamptz(6)
+  raw               Json?
+  items             OrderItem[]
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy         String?      @map("created_by") @db.Uuid
+
+  @@index([placedAt])
+  @@index([channel, placedAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                 String   @id @default(uuid()) @db.Uuid
+  orderId            String   @map("order_id") @db.Uuid
+  order              Order    @relation(fields: [orderId], references: [id])
+  shopifyLineItemId  String   @map("shopify_line_item_id")
+  productId          String?  @map("product_id") @db.Uuid
+  sku                String?
+  title              String
+  qty                Int
+  refundedQty        Int      @default(0) @map("refunded_qty")
+  priceCents         Int      @map("price_cents")
+  discountCents      Int      @default(0) @map("discount_cents")
+  costCentsAtSale    Int?     @map("cost_cents_at_sale")
+  gramsAtSale        Decimal? @map("grams_at_sale") @db.Decimal(8, 2)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy          String?  @map("created_by") @db.Uuid
+
+  @@unique([orderId, shopifyLineItemId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+/// Webhooks recibidos de Shopify: idempotencia por X-Shopify-Webhook-Id.
+model WebhookEvent {
+  id          String    @id @default(uuid()) @db.Uuid
+  webhookId   String    @unique @map("webhook_id")
+  topic       String
+  shopDomain  String?   @map("shop_domain")
+  receivedAt  DateTime  @default(now()) @map("received_at") @db.Timestamptz(6)
+  processedAt DateTime? @map("processed_at") @db.Timestamptz(6)
+  error       String?
+  payload     Json
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?   @map("created_by") @db.Uuid
+
+  @@index([topic, receivedAt])
+  @@map("webhook_events")
+}

@@ -18,6 +18,12 @@ export const SETTING_DEFAULTS = {
   apertura_mes: "2026-10",
   /** "si" para sacar una foto con la cámara de la tablet al fichar. */
   kiosk_foto: "no",
+  /** Ventas (unidades) por semana según el plan. */
+  ventas_semana_base: 15,
+  ventas_semana_conservador: 12,
+  ventas_semana_optimista: 20,
+  ventas_semana_cubre_gastos: 9.5,
+  ventas_semana_cubre_gastos_y_banco: 11.2,
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
