@@ -8,15 +8,33 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { settingsFormSchema, type SettingsFormValues } from "./schema";
-import { updateSettings } from "./actions";
+import { settingsFormSchema, type SettingsFormInput, type SettingsFormValues } from "./schema";
+import { listShopifyLocationsAction, updateSettings } from "./actions";
+import { repriceAllAction } from "@/app/app/inventario/actions";
+import { useState } from "react";
 
 export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormValues }) {
   const [pending, startTransition] = useTransition();
-  const form = useForm<SettingsFormValues>({
+  const form = useForm<SettingsFormInput, unknown, SettingsFormValues>({
     resolver: zodResolver(settingsFormSchema),
     defaultValues,
   });
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+
+  function loadLocations() {
+    startTransition(async () => {
+      const r = await listShopifyLocationsAction();
+      if (r.ok && r.locations) { setLocations(r.locations); toast.success(`${r.locations.length} ubicación(es) encontradas`); }
+      else toast.error(r.ok ? "Sin ubicaciones" : r.error);
+    });
+  }
+  function reprice() {
+    startTransition(async () => {
+      const r = await repriceAllAction();
+      if (r.ok) toast.success(r.message ?? "Listo");
+      else toast.error(r.error);
+    });
+  }
 
   function onSubmit(values: SettingsFormValues) {
     startTransition(async () => {
@@ -27,7 +45,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormVal
       } else {
         toast.error(res.error);
         for (const [name, msgs] of Object.entries(res.fieldErrors ?? {})) {
-          form.setError(name as keyof SettingsFormValues, { message: msgs?.[0] });
+          form.setError(name as keyof SettingsFormInput, { message: msgs?.[0] });
         }
       }
     });
@@ -41,6 +59,10 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormVal
             <CardTitle>Precio y costo</CardTitle>
             <CardDescription>Se aplican a todo producto nuevo. Un producto con precio sobrescrito no cambia.</CardDescription>
           </CardHeader>
+          <CardContent className="-mt-2 mb-2">
+            <Button type="button" variant="outline" size="sm" disabled={pending} onClick={reprice}>Recalcular precios del inventario con estos valores</Button>
+            <p className="mt-1 text-xs text-muted-foreground">Guardá primero. Solo cambia productos sin precio manual; cada cambio queda en el historial.</p>
+          </CardContent>
           <CardContent className="grid gap-4 sm:grid-cols-3">
             <FormField control={form.control} name="precio_por_gramo" render={({ field }) => (
               <FormItem>
@@ -121,6 +143,36 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormVal
               <FormItem>
                 <FormLabel>Zona horaria de la tienda</FormLabel>
                 <FormControl><Input className="font-mono" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Integraciones</CardTitle>
+            <CardDescription>Las claves van en Vercel (variables de entorno). Acá solo los identificadores.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <FormField control={form.control} name="drive_root_folder_id" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Carpeta raíz de fotos en Google Drive (ID)</FormLabel>
+                <FormControl><Input className="font-mono" placeholder="1AbC…" {...field} /></FormControl>
+                <FormDescription>Es la parte final de la URL de la carpeta. Ver docs/SETUP-DRIVE.md.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="shopify_location_id" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ubicación de Shopify (stock de la tienda)</FormLabel>
+                <FormControl><Input className="font-mono" placeholder="gid://shopify/Location/…" {...field} /></FormControl>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" disabled={pending} onClick={loadLocations}>Buscar ubicaciones en Shopify</Button>
+                  {locations.map((l) => (
+                    <Button key={l.id} type="button" variant="secondary" size="sm" onClick={() => form.setValue("shopify_location_id", l.id, { shouldDirty: true })}>{l.name}</Button>
+                  ))}
+                </div>
                 <FormMessage />
               </FormItem>
             )} />

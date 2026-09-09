@@ -59,3 +59,114 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_log")
 }
+
+// ---------------------------------------------------------------------------
+// Fase 1 — Inventario
+// ---------------------------------------------------------------------------
+
+enum ProductType {
+  necklace
+  bracelet
+  earring
+  ring
+  charm
+  pendant
+}
+
+enum ProductStatus {
+  draft
+  active
+  archived
+}
+
+enum StockReason {
+  purchase
+  sale
+  return
+  adjustment
+  loss
+  transfer
+}
+
+model Product {
+  id                     String        @id @default(uuid()) @db.Uuid
+  sku                    String        @unique
+  /// Agrupa variantes de un mismo producto de Shopify (mismo handle = mismo producto).
+  handle                 String
+  title                  String
+  type                   ProductType
+  subcategory            String
+  extraTags              String[]      @default([]) @map("extra_tags")
+  karat                  String        @default("14k")
+  grams                  Decimal       @db.Decimal(8, 2)
+  descriptionHtml        String        @default("") @map("description_html")
+  optionName             String?       @map("option_name")
+  optionValue            String?       @map("option_value")
+  costCents              Int           @map("cost_cents")
+  priceCents             Int           @map("price_cents")
+  priceOverride          Boolean       @default(false) @map("price_override")
+  status                 ProductStatus @default(draft)
+  shopifyProductId       String?       @map("shopify_product_id")
+  shopifyVariantId       String?       @map("shopify_variant_id")
+  shopifyInventoryItemId String?       @map("shopify_inventory_item_id")
+  shopifySyncedAt        DateTime?     @map("shopify_synced_at") @db.Timestamptz(6)
+  driveFolderId          String?       @map("drive_folder_id")
+  barcode                String
+  purchaseItemId         String?       @map("purchase_item_id") @db.Uuid
+  notes                  String?
+  images                 ProductImage[]
+  movements              StockMovement[]
+  createdAt              DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy              String?       @map("created_by") @db.Uuid
+
+  @@index([type])
+  @@index([status])
+  @@index([handle])
+  @@map("products")
+}
+
+model ProductImage {
+  id          String   @id @default(uuid()) @db.Uuid
+  productId   String   @map("product_id") @db.Uuid
+  product     Product  @relation(fields: [productId], references: [id])
+  driveFileId String?  @map("drive_file_id")
+  fileName    String   @map("file_name")
+  publicUrl   String   @map("public_url")
+  position    Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?  @map("created_by") @db.Uuid
+
+  @@unique([productId, fileName])
+  @@map("product_images")
+}
+
+/// El stock actual de un producto es la suma de `qty`. Nunca se edita un campo de stock.
+model StockMovement {
+  id        String      @id @default(uuid()) @db.Uuid
+  productId String      @map("product_id") @db.Uuid
+  product   Product     @relation(fields: [productId], references: [id])
+  qty       Int
+  reason    StockReason
+  reference String?
+  note      String?
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?     @map("created_by") @db.Uuid
+
+  @@index([productId])
+  @@index([reason, createdAt])
+  @@map("stock_movements")
+}
+
+/// Último número usado por tipo para generar SKUs sin colisiones.
+model SkuCounter {
+  type       String   @id
+  lastNumber Int      @default(0) @map("last_number")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy  String?  @map("created_by") @db.Uuid
+
+  @@map("sku_counters")
+}

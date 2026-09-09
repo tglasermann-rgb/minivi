@@ -10,6 +10,10 @@ export const SETTING_DEFAULTS = {
   semana_inicia: "monday",
   overtime_umbral_horas: 40,
   tienda_timezone: "America/New_York",
+  /** ID de la carpeta raíz de Google Drive con las fotos (docs/SETUP-DRIVE.md). */
+  drive_root_folder_id: "",
+  /** gid://shopify/Location/… de la tienda física (docs/SETUP-SHOPIFY.md). */
+  shopify_location_id: "",
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;

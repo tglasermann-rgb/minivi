@@ -18,6 +18,8 @@ export default async function ConfiguracionPage() {
     semana_inicia: (s.semana_inicia === "sunday" ? "sunday" : "monday"),
     overtime_umbral_horas: s.overtime_umbral_horas,
     tienda_timezone: s.tienda_timezone,
+    drive_root_folder_id: s.drive_root_folder_id,
+    shopify_location_id: s.shopify_location_id,
   };
 
   return (

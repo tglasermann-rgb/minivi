@@ -7,7 +7,7 @@ Decisiones ya tomadas (no se vuelven a discutir): Shopify es la fuente de verdad
 | Fase | Qué | Estado |
 |---|---|---|
 | 0 | Base del proyecto | ✅ Lista para probar |
-| 1 | Inventario, SKU, etiquetas y export | Pendiente |
+| 1 | Inventario, SKU, etiquetas y export | ✅ Lista para probar |
 | 2 | Compras | Pendiente |
 | 3 | Gastos | Pendiente |
 | 4 | Empleados, fichaje y nómina | Pendiente |
@@ -35,7 +35,7 @@ Orden sugerido: 0 → 1 (para cuando llegue la mercadería) → 3 (ya hay gastos
 
 ---
 
-## Fase 1 — Inventario, SKU, etiquetas y export
+## Fase 1 — Inventario, SKU, etiquetas y export ✅
 
 Modelo: `products`, `product_images`, `stock_movements` (el stock es la suma de movimientos; nunca un campo editable).
 
