@@ -62,5 +62,11 @@
     "tsx": "^4",
     "typescript": "^5",
     "vitest": "^4"
+  },
+  "allowScripts": {
+    "@prisma/engines": true,
+    "prisma": true,
+    "esbuild": true,
+    "unrs-resolver": true
   }
 }
