@@ -1,0 +1,61 @@
+// MiniVi OS — modelo de datos (Fase 0)
+// Ver docs/DATA-MODEL.md para el detalle y las fases siguientes.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  owner
+  kiosk
+}
+
+/// Perfil de usuario. `id` = auth.users.id de Supabase.
+/// Se crea solo en el primer login (ver src/lib/auth.ts).
+model Profile {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  fullName  String?  @map("full_name")
+  role      Role     @default(kiosk)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?  @map("created_by") @db.Uuid
+
+  @@map("profiles")
+}
+
+/// Parámetros globales clave/valor. Los valores se guardan como texto
+/// y se tipan en src/lib/settings.ts.
+model Setting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?  @map("created_by") @db.Uuid
+
+  @@map("settings")
+}
+
+/// Toda modificación de datos deja una fila acá (ver src/lib/audit.ts).
+model AuditLog {
+  id        BigInt   @id @default(autoincrement())
+  entity    String
+  entityId  String   @map("entity_id")
+  action    String
+  before    Json?
+  after     Json?
+  userId    String?  @map("user_id") @db.Uuid
+  userEmail String?  @map("user_email")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?  @map("created_by") @db.Uuid
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_log")
+}
