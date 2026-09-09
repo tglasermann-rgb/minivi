@@ -22,7 +22,7 @@ export default async function PresupuestosPage() {
       <PageHeader eyebrow="Gastos" title="Presupuestos del plan" description={`Mes de apertura configurado: ${monthLabel(s.apertura_mes)} (se cambia en Configuración).`} />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Apertura (una sola vez)</CardTitle><CardDescription>Presupuesto por grupo. <CardDescription>Presupuesto por grupo. "Inventario" se compara contra las compras.</CardDescription>quot;Inventario<CardDescription>Presupuesto por grupo. "Inventario" se compara contra las compras.</CardDescription>quot; se compara contra las compras.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Apertura (una sola vez)</CardTitle><CardDescription>Presupuesto por grupo. &quot;Inventario&quot; se compara contra las compras.</CardDescription></CardHeader>
           <CardContent><BudgetEditors kind="opening" items={opening.map((o) => ({ id: o.group, name: o.group, amountCents: o.amountCents, laterCents: null }))} /></CardContent>
         </Card>
         <Card>
