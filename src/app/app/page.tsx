@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { getSettings } from "@/lib/settings";
 import { formatCents } from "@/lib/money";
 import { upcomingPayables } from "@/lib/purchases/service";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
@@ -16,7 +17,7 @@ const CARDS = [
 ];
 
 export default async function HomePage() {
-  const [settings, payables] = await Promise.all([getSettings(), upcomingPayables(7)]);
+  const [settings, payables, lastExpenses] = await Promise.all([getSettings(), upcomingPayables(7), prisma.expense.findMany({ include: { category: true }, orderBy: [{ date: "desc" }, { createdAt: "desc" }], take: 5 })]);
   const today = new Date(); today.setUTCHours(0, 0, 0, 0);
   const dateFmt = new Intl.DateTimeFormat("es-US", { dateStyle: "medium", timeZone: "UTC" });
   return (
@@ -49,7 +50,20 @@ export default async function HomePage() {
         </Card>
       )}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {CARDS.filter((c) => c.phase !== 2).map((c) => (
+        <Card>
+          <CardHeader>
+            <CardTitle>Últimos gastos</CardTitle>
+            <CardDescription><Link href="/app/gastos" className="text-oro-profundo hover:underline">Cargar o ver todos</Link></CardDescription>
+          </CardHeader>
+          <CardContent>
+            {lastExpenses.length === 0 ? <p className="text-sm text-muted-foreground">Sin gastos cargados.</p> : (
+              <ul className="grid gap-1 text-sm">
+                {lastExpenses.map((e) => <li key={e.id} className="flex justify-between gap-2 border-b py-1 last:border-0"><span className="truncate">{e.vendor} <span className="text-muted-foreground">· {e.category.name}</span></span><span className="font-mono text-xs">{formatCents(e.amountCents)}</span></li>)}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+        {CARDS.filter((c) => c.phase !== 2 && c.phase !== 3).map((c) => (
           <Card key={c.title} className="min-h-36">
             <CardHeader>
               <CardTitle>{c.title}</CardTitle>

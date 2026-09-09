@@ -139,6 +139,14 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormVal
                 <FormMessage />
               </FormItem>
             )} />
+            <FormField control={form.control} name="apertura_mes" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mes de apertura (AAAA-MM)</FormLabel>
+                <FormControl><Input type="month" className="font-mono" {...field} /></FormControl>
+                <FormDescription>Mes 1 del plan: presupuestos, marketing desde el mes 7 y caja objetivo.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
             <FormField control={form.control} name="tienda_timezone" render={({ field }) => (
               <FormItem>
                 <FormLabel>Zona horaria de la tienda</FormLabel>

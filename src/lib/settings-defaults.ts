@@ -14,6 +14,8 @@ export const SETTING_DEFAULTS = {
   drive_root_folder_id: "",
   /** gid://shopify/Location/… de la tienda física (docs/SETUP-SHOPIFY.md). */
   shopify_location_id: "",
+  /** Mes de apertura de la tienda (YYYY-MM). Marca el mes 1 del plan para presupuestos y caja objetivo. */
+  apertura_mes: "2026-10",
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;

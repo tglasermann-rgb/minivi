@@ -9,7 +9,7 @@ Decisiones ya tomadas (no se vuelven a discutir): Shopify es la fuente de verdad
 | 0 | Base del proyecto | ✅ Lista para probar |
 | 1 | Inventario, SKU, etiquetas y export | ✅ Lista para probar |
 | 2 | Compras | ✅ Lista para probar |
-| 3 | Gastos | Pendiente |
+| 3 | Gastos | ✅ Lista para probar |
 | 4 | Empleados, fichaje y nómina | Pendiente |
 | 5 | Ventas (Shopify web, POS y TikTok) | Pendiente |
 | 6 | Inicio, reportes y regla de parada | Pendiente |
@@ -61,11 +61,11 @@ Modelo: `suppliers`, `purchases`, `purchase_items`, `payables`, adjuntos en buck
 
 **Entregable:** compra de 20 piezas a $100/g con 30/60/90 → 20 productos con SKU, precio y stock, y tres cuentas por pagar.
 
-## Fase 3 — Gastos
+## Fase 3 — Gastos ✅
 
 Modelo: `expense_categories` (apertura y recurrentes, precargadas), `expenses` con `receipt_url` en bucket privado `receipts`, `reembolsable`.
 
-1. Carga rápida desde el celular con foto (OCR opcional).
+1. Carga rápida desde el celular con foto. OCR: no se hizo (opcional); el monto y la fecha se tipean.
 2. Gastos recurrentes: esperado vs. cargado.
 3. Vista "Apertura" contra presupuesto (Build-out 34,000; Seguridad 21,100; Marketing de apertura 10,000; Licencias/seguro/legal 8,000; Depósitos 7,200; Web 1,700; Empaque 5,500; Inventario 75,000).
 4. Vista "Mensual" contra presupuesto editable (renta 2,400; nómina 7,767; marketing 2,500 los primeros 6 meses y 4,500 después; etc.).

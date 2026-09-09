@@ -24,7 +24,7 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 
 ## Estado
 
-**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista para probar (proveedores, órdenes de compra en PDF, recepción que crea productos y stock, cuentas por pagar con alerta en Inicio, costo promedio por gramo en Reportes).
+**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista. **Fase 3 — Gastos:** lista para probar (carga con foto, categorías del plan, apertura vs presupuesto, mensual vs presupuesto, reembolsables, CSV para el contador).
 
 ## Cómo probar la fase 0
 
@@ -54,6 +54,15 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 4. **Recibir mercadería**: confirmá las cantidades. Aparecen los SKU en cada línea; en Inventario están los productos con precio automático y stock. Probá recibir parcial primero (menos unidades) y después el resto.
 5. **Cuentas por pagar**: tres cuotas pendientes; marcá una como pagada. En Inicio aparecen las que vencen en 7 días.
 6. Reportes: costo promedio por gramo del inventario, ponderado por gramos.
+
+## Cómo probar la fase 3
+
+1. Desde el celular: Gastos → sacá la foto de una factura, poné fecha, monto y categoría → **Guardar gasto**. Menos de 30 segundos.
+2. Pagá algo con "Tarjeta personal de Tomas": queda **reembolsable**; después "marcar reembolsado".
+3. **Apertura**: barras de gastado vs presupuesto por grupo del plan (Build-out 34,000, Seguridad 21,100…). Inventario suma las compras.
+4. **Mensual**: matriz de 6 meses; clic en un presupuesto para cambiarlo solo ese mes. Marketing pasa de 2,500 a 4,500 desde el mes 7 (Configuración → mes de apertura).
+5. **Presupuestos**: editar montos del plan.
+6. **CSV contador**: descarga el mes con la columna de reembolsable.
 
 ## Estructura
 

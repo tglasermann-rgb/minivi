@@ -268,3 +268,97 @@ model Payable {
   @@index([purchaseId])
   @@map("payables")
 }
+
+// ---------------------------------------------------------------------------
+// Fase 3 — Gastos
+// ---------------------------------------------------------------------------
+
+enum ExpenseGroup {
+  opening
+  recurring
+}
+
+enum PaymentMethod {
+  company_card
+  cash
+  transfer
+  personal_card_tomas
+  personal_card_nissim
+}
+
+enum ExpenseFrequency {
+  monthly
+  yearly
+}
+
+model ExpenseCategory {
+  id                  String       @id @default(uuid()) @db.Uuid
+  name                String       @unique
+  group               ExpenseGroup
+  /// Grupo de presupuesto de apertura (varias categorías pueden compartirlo)
+  budgetGroup         String?      @map("budget_group")
+  /// Presupuesto mensual del plan (centavos), solo recurrentes
+  monthlyBudgetCents  Int          @default(0) @map("monthly_budget_cents")
+  /// Presupuesto mensual a partir del mes 7 (p. ej. marketing 2,500 → 4,500)
+  monthlyBudgetLaterCents Int?     @map("monthly_budget_later_cents")
+  sort                Int          @default(0)
+  active              Boolean      @default(true)
+  expenses            Expense[]
+  monthlyBudgets      MonthlyBudget[]
+  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy           String?      @map("created_by") @db.Uuid
+
+  @@map("expense_categories")
+}
+
+/// Presupuesto de apertura por grupo (una sola vez).
+model OpeningBudget {
+  group       String   @id
+  amountCents Int      @map("amount_cents")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?  @map("created_by") @db.Uuid
+
+  @@map("opening_budgets")
+}
+
+/// Presupuesto mensual editable por categoría y mes (YYYY-MM). Si no existe, se usa el de la categoría.
+model MonthlyBudget {
+  id          String          @id @default(uuid()) @db.Uuid
+  yearMonth   String          @map("year_month")
+  categoryId  String          @map("category_id") @db.Uuid
+  category    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  amountCents Int             @map("amount_cents")
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?         @map("created_by") @db.Uuid
+
+  @@unique([yearMonth, categoryId])
+  @@map("monthly_budgets")
+}
+
+model Expense {
+  id            String            @id @default(uuid()) @db.Uuid
+  date          DateTime          @db.Date
+  categoryId    String            @map("category_id") @db.Uuid
+  category      ExpenseCategory   @relation(fields: [categoryId], references: [id])
+  vendor        String
+  amountCents   Int               @map("amount_cents")
+  paymentMethod PaymentMethod     @map("payment_method")
+  recurring     Boolean           @default(false)
+  frequency     ExpenseFrequency?
+  notes         String?
+  /// path en el bucket privado `receipts`
+  receiptPath   String?           @map("receipt_path")
+  paid          Boolean           @default(true)
+  reimbursable  Boolean           @default(false)
+  reimbursedOn  DateTime?         @map("reimbursed_on") @db.Date
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy     String?           @map("created_by") @db.Uuid
+
+  @@index([date])
+  @@index([categoryId, date])
+  @@map("expenses")
+}
