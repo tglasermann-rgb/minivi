@@ -1,23 +1,24 @@
+import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { getCurrentUser } from "@/lib/auth";
-import Link from "next/link";
+import { getSettings } from "@/lib/settings";
+import { PinPad } from "./pin-pad";
 
-export const metadata = { title: "Kiosco" };
+export const metadata = { title: "Fichaje" };
+export const dynamic = "force-dynamic";
 
 export default async function KioskPage() {
-  const user = await getCurrentUser();
+  const [user, s] = await Promise.all([getCurrentUser(), getSettings()]);
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-8 p-8 text-center">
-      <Logo tone="oro" height={32} />
-      <div>
-        <p className="font-display text-2xl">Fichaje</p>
-        <p className="mt-2 max-w-sm text-sm text-sidebar-muted">
-          El teclado de PIN para entrada y salida llega en la fase 4. Esta tablet queda lista con el usuario <span className="font-mono">{user?.email}</span>.
-        </p>
+    <div className="flex min-h-dvh flex-col items-center justify-between p-6">
+      <div className="flex w-full max-w-sm items-center justify-between">
+        <Logo tone="oro" height={22} />
+        <span className="font-mono text-xs text-sidebar-muted">{new Intl.DateTimeFormat("es-US", { weekday: "short", day: "2-digit", month: "short", timeZone: s.tienda_timezone }).format(new Date())}</span>
       </div>
-      <div className="flex gap-4 text-sm">
-        {user?.role === "owner" && <Link href="/app" className="text-oro-claro underline-offset-4 hover:underline">Ir al portal</Link>}
-        <a href="/auth/signout" className="text-sidebar-muted underline-offset-4 hover:underline">Cerrar sesión</a>
+      <PinPad cameraEnabled={s.kiosk_foto === "si"} />
+      <div className="flex gap-4 text-xs text-sidebar-muted">
+        {user?.role === "owner" && <Link href="/app" className="hover:text-oro-claro">Ir al portal</Link>}
+        <a href="/auth/signout" className="hover:text-oro-claro">Cerrar sesión</a>
       </div>
     </div>
   );

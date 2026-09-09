@@ -40,6 +40,7 @@ export async function updateSettings(input: unknown): Promise<ActionResult> {
     overtime_umbral_horas: String(v.overtime_umbral_horas),
     tienda_timezone: v.tienda_timezone,
     apertura_mes: v.apertura_mes,
+    kiosk_foto: v.kiosk_foto,
     drive_root_folder_id: v.drive_root_folder_id,
     shopify_location_id: v.shopify_location_id,
   };

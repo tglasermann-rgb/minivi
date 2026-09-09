@@ -24,7 +24,7 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 
 ## Estado
 
-**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista. **Fase 3 — Gastos:** lista para probar (carga con foto, categorías del plan, apertura vs presupuesto, mensual vs presupuesto, reembolsables, CSV para el contador).
+**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista. **Fase 3 — Gastos:** lista. **Fase 4 — Empleados y nómina:** lista para probar (kiosco con PIN en la tablet, foto opcional, corrección de entradas con historial, períodos 1–15 y 16–fin, hora extra 1.5× sobre 40 h/semana, cierre con PDF y CSV para el proveedor de nómina, nómina por mes vs plan).
 
 ## Cómo probar la fase 0
 
@@ -63,6 +63,14 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 4. **Mensual**: matriz de 6 meses; clic en un presupuesto para cambiarlo solo ese mes. Marketing pasa de 2,500 a 4,500 desde el mes 7 (Configuración → mes de apertura).
 5. **Presupuestos**: editar montos del plan.
 6. **CSV contador**: descarga el mes con la columna de reembolsable.
+
+## Cómo probar la fase 4
+
+1. Empleados → **Nueva empleada**: nombre, PIN de 4 dígitos, tarifa por hora. Creá dos.
+2. En la tablet (o en tu celular), entrá con el usuario del kiosco a `/kiosk`. Tecleá el PIN: "Entrada". Volvé a teclearlo: "Salida" con las horas. En Configuración podés activar la foto al fichar.
+3. Empleados: "Fichadas ahora" y la tabla de entradas del período. Corregí una entrada (lápiz) o agregá una manual: queda marcada con ✎ y en el historial.
+4. Nómina: elegí el período, mirá horas normales y extra por empleada. Con una semana de 45 h aparecen 5 h extra. **Cerrar período** → **PDF** y **CSV para payroll** (nombre, regular hours, overtime hours, rate). **Marcar pagado**.
+5. Nómina por mes vs. plan: compara el bruto de los períodos cerrados contra los 7,767 del plan.
 
 ## Estructura
 

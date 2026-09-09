@@ -362,3 +362,88 @@ model Expense {
   @@index([categoryId, date])
   @@map("expenses")
 }
+
+// ---------------------------------------------------------------------------
+// Fase 4 — Empleados, fichaje y nómina
+// ---------------------------------------------------------------------------
+
+enum PayPeriodStatus {
+  open
+  closed
+  paid
+}
+
+model Employee {
+  id              String          @id @default(uuid()) @db.Uuid
+  name            String
+  pinHash         String          @map("pin_hash")
+  hourlyRateCents Int             @map("hourly_rate_cents")
+  hiredOn         DateTime?       @map("hired_on") @db.Date
+  active          Boolean         @default(true)
+  phone           String?
+  email           String?
+  notes           String?
+  timeEntries     TimeEntry[]
+  payLines        PayPeriodLine[]
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy       String?         @map("created_by") @db.Uuid
+
+  @@map("employees")
+}
+
+model TimeEntry {
+  id           String    @id @default(uuid()) @db.Uuid
+  employeeId   String    @map("employee_id") @db.Uuid
+  employee     Employee  @relation(fields: [employeeId], references: [id])
+  clockIn      DateTime  @map("clock_in") @db.Timestamptz(6)
+  clockOut     DateTime? @map("clock_out") @db.Timestamptz(6)
+  breakMinutes Int       @default(0) @map("break_minutes")
+  /// uuid del owner que corrigió la entrada (null si la fichó la empleada)
+  editedBy     String?   @map("edited_by") @db.Uuid
+  note         String?
+  /// foto al fichar, en el bucket privado clock-photos
+  photoInPath  String?   @map("photo_in_path")
+  photoOutPath String?   @map("photo_out_path")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy    String?   @map("created_by") @db.Uuid
+
+  @@index([employeeId, clockIn])
+  @@index([clockIn])
+  @@map("time_entries")
+}
+
+model PayPeriod {
+  id        String          @id @default(uuid()) @db.Uuid
+  startsOn  DateTime        @map("starts_on") @db.Date
+  endsOn    DateTime        @map("ends_on") @db.Date
+  status    PayPeriodStatus @default(open)
+  closedAt  DateTime?       @map("closed_at") @db.Timestamptz(6)
+  paidAt    DateTime?       @map("paid_at") @db.Timestamptz(6)
+  lines     PayPeriodLine[]
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?         @map("created_by") @db.Uuid
+
+  @@unique([startsOn, endsOn])
+  @@map("pay_periods")
+}
+
+model PayPeriodLine {
+  id            String    @id @default(uuid()) @db.Uuid
+  payPeriodId   String    @map("pay_period_id") @db.Uuid
+  payPeriod     PayPeriod @relation(fields: [payPeriodId], references: [id])
+  employeeId    String    @map("employee_id") @db.Uuid
+  employee      Employee  @relation(fields: [employeeId], references: [id])
+  regularHours  Decimal   @map("regular_hours") @db.Decimal(6, 2)
+  overtimeHours Decimal   @map("overtime_hours") @db.Decimal(6, 2)
+  rateCents     Int       @map("rate_cents")
+  grossCents    Int       @map("gross_cents")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy     String?   @map("created_by") @db.Uuid
+
+  @@unique([payPeriodId, employeeId])
+  @@map("pay_period_lines")
+}

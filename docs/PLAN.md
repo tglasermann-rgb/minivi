@@ -10,7 +10,7 @@ Decisiones ya tomadas (no se vuelven a discutir): Shopify es la fuente de verdad
 | 1 | Inventario, SKU, etiquetas y export | ✅ Lista para probar |
 | 2 | Compras | ✅ Lista para probar |
 | 3 | Gastos | ✅ Lista para probar |
-| 4 | Empleados, fichaje y nómina | Pendiente |
+| 4 | Empleados, fichaje y nómina | ✅ Lista para probar |
 | 5 | Ventas (Shopify web, POS y TikTok) | Pendiente |
 | 6 | Inicio, reportes y regla de parada | Pendiente |
 | 7 | Extras que Shopify no da | Pendiente |
@@ -73,7 +73,7 @@ Modelo: `expense_categories` (apertura y recurrentes, precargadas), `expenses` c
 
 **Entregable:** cargar un gasto con foto en menos de 30 segundos y ver apertura vs. presupuesto.
 
-## Fase 4 — Empleados, fichaje y nómina
+## Fase 4 — Empleados, fichaje y nómina ✅
 
 Modelo: `employees` (PIN hasheado, tarifa por hora), `time_entries`, `pay_periods`.
 

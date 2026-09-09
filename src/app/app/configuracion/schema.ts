@@ -8,6 +8,7 @@ export const settingsFormSchema = z.object({
   kilataje_default: z.enum(["10k", "14k", "18k"]),
   semana_inicia: z.enum(["monday", "sunday"]),
   overtime_umbral_horas: z.coerce.number().int().min(1).max(80),
+  kiosk_foto: z.enum(["si", "no"]).default("no"),
   apertura_mes: z.string().regex(/^\d{4}-\d{2}$/, "Formato AAAA-MM"),
   drive_root_folder_id: z.string().trim().max(200).default(""),
   shopify_location_id: z.string().trim().max(200).default("").refine((v) => v === "" || v.startsWith("gid://shopify/Location/"), "Tiene que ser un gid://shopify/Location/…"),

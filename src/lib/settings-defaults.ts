@@ -16,6 +16,8 @@ export const SETTING_DEFAULTS = {
   shopify_location_id: "",
   /** Mes de apertura de la tienda (YYYY-MM). Marca el mes 1 del plan para presupuestos y caja objetivo. */
   apertura_mes: "2026-10",
+  /** "si" para sacar una foto con la cámara de la tablet al fichar. */
+  kiosk_foto: "no",
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;

@@ -4,6 +4,7 @@ import { getSettings } from "@/lib/settings";
 import { formatCents } from "@/lib/money";
 import { upcomingPayables } from "@/lib/purchases/service";
 import { prisma } from "@/lib/prisma";
+import { whoIsIn } from "@/lib/payroll/service";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
@@ -17,7 +18,8 @@ const CARDS = [
 ];
 
 export default async function HomePage() {
-  const [settings, payables, lastExpenses] = await Promise.all([getSettings(), upcomingPayables(7), prisma.expense.findMany({ include: { category: true }, orderBy: [{ date: "desc" }, { createdAt: "desc" }], take: 5 })]);
+  const [settings, payables, lastExpenses, inNow] = await Promise.all([getSettings(), upcomingPayables(7), prisma.expense.findMany({ include: { category: true }, orderBy: [{ date: "desc" }, { createdAt: "desc" }], take: 5 }), whoIsIn()]);
+  const timeFmt = new Intl.DateTimeFormat("es-US", { hour: "2-digit", minute: "2-digit", timeZone: settings.tienda_timezone });
   const today = new Date(); today.setUTCHours(0, 0, 0, 0);
   const dateFmt = new Intl.DateTimeFormat("es-US", { dateStyle: "medium", timeZone: "UTC" });
   return (
@@ -63,7 +65,18 @@ export default async function HomePage() {
             )}
           </CardContent>
         </Card>
-        {CARDS.filter((c) => c.phase !== 2 && c.phase !== 3).map((c) => (
+        <Card>
+          <CardHeader>
+            <CardTitle>Fichadas ahora</CardTitle>
+            <CardDescription><Link href="/app/empleados" className="text-oro-profundo hover:underline">Empleados y nómina</Link></CardDescription>
+          </CardHeader>
+          <CardContent>
+            {inNow.length === 0 ? <p className="text-sm text-muted-foreground">Nadie fichado en este momento.</p> : (
+              <ul className="grid gap-1 text-sm">{inNow.map((e) => <li key={e.id} className="flex justify-between border-b py-1 last:border-0"><span>{e.employee.name}</span><span className="font-mono text-xs">desde {timeFmt.format(e.clockIn)}</span></li>)}</ul>
+            )}
+          </CardContent>
+        </Card>
+        {CARDS.filter((c) => c.phase !== 2 && c.phase !== 3 && c.phase !== 4).map((c) => (
           <Card key={c.title} className="min-h-36">
             <CardHeader>
               <CardTitle>{c.title}</CardTitle>

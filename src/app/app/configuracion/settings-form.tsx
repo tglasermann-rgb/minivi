@@ -139,6 +139,16 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormVal
                 <FormMessage />
               </FormItem>
             )} />
+            <FormField control={form.control} name="kiosk_foto" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Foto al fichar en la tablet</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                  <SelectContent><SelectItem value="no">No</SelectItem><SelectItem value="si">Sí, con la cámara frontal</SelectItem></SelectContent>
+                </Select>
+                <FormDescription>La tablet pide permiso de cámara la primera vez.</FormDescription>
+              </FormItem>
+            )} />
             <FormField control={form.control} name="apertura_mes" render={({ field }) => (
               <FormItem>
                 <FormLabel>Mes de apertura (AAAA-MM)</FormLabel>
