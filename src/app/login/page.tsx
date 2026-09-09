@@ -1,6 +1,12 @@
 import { Logo } from "@/components/logo";
 import { LoginForm } from "./login-form";
 
+/** Identificador corto del deploy (commit de git en Vercel) para saber qué versión está publicada. */
+function buildVersion(): string {
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_COMMIT_SHA;
+  return sha ? sha.slice(0, 7) : "local";
+}
+
 export const metadata = { title: "Entrar" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
@@ -25,6 +31,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <h1 className="text-2xl">Entrar</h1>
           <p className="mb-6 mt-1 text-sm text-muted-foreground">Usá tu email y contraseña.</p>
           <LoginForm next={next} />
+          <p className="mt-8 text-center font-mono text-[10px] text-muted-foreground/70">versión {buildVersion()}</p>
         </div>
       </div>
     </div>
