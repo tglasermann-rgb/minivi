@@ -11,6 +11,24 @@ const schema = z.object({
 
 export type LoginState = { error?: string };
 
+/** Traduce los errores de Supabase Auth a algo accionable en español. */
+function describeAuthError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("not confirmed")) {
+    return "Tu usuario existe pero no está confirmado. En Supabase → Authentication → Users, borrá el usuario y crealo de nuevo marcando \"Auto Confirm User\".";
+  }
+  if (m.includes("invalid login credentials") || m.includes("invalid credentials")) {
+    return "Email o contraseña incorrectos. Revisá el usuario en Supabase → Authentication → Users.";
+  }
+  if (m.includes("rate limit") || m.includes("too many")) {
+    return "Demasiados intentos seguidos. Esperá un minuto y probá de nuevo.";
+  }
+  if (m.includes("invalid api key") || m.includes("jwt")) {
+    return "La clave de Supabase configurada en Vercel no es válida (NEXT_PUBLIC_SUPABASE_ANON_KEY).";
+  }
+  return `No se pudo iniciar sesión: ${message}`;
+}
+
 export async function signIn(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const parsed = schema.safeParse({
     email: formData.get("email"),
@@ -24,7 +42,7 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
     email: parsed.data.email,
     password: parsed.data.password,
   });
-  if (error) return { error: "Email o contraseña incorrectos." };
+  if (error) return { error: describeAuthError(error.message) };
 
   // "/" decide según rol (owner → /app, kiosk → /kiosk). Solo aceptamos rutas internas.
   const next = parsed.data.next;
