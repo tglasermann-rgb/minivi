@@ -1,0 +1,731 @@
+// MiniVi OS — modelo de datos (Fase 0)
+// Ver docs/DATA-MODEL.md para el detalle y las fases siguientes.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  owner
+  kiosk
+}
+
+/// Perfil de usuario. `id` = auth.users.id de Supabase.
+/// Se crea solo en el primer login (ver src/lib/auth.ts).
+model Profile {
+  id        String   @id @db.Uuid
+  email     String   @unique
+  fullName  String?  @map("full_name")
+  role      Role     @default(kiosk)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?  @map("created_by") @db.Uuid
+
+  @@map("profiles")
+}
+
+/// Parámetros globales clave/valor. Los valores se guardan como texto
+/// y se tipan en src/lib/settings.ts.
+model Setting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?  @map("created_by") @db.Uuid
+
+  @@map("settings")
+}
+
+/// Toda modificación de datos deja una fila acá (ver src/lib/audit.ts).
+model AuditLog {
+  id        BigInt   @id @default(autoincrement())
+  entity    String
+  entityId  String   @map("entity_id")
+  action    String
+  before    Json?
+  after     Json?
+  userId    String?  @map("user_id") @db.Uuid
+  userEmail String?  @map("user_email")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?  @map("created_by") @db.Uuid
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_log")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 1 — Inventario
+// ---------------------------------------------------------------------------
+
+enum ProductType {
+  necklace
+  bracelet
+  earring
+  ring
+  charm
+  pendant
+}
+
+enum ProductStatus {
+  draft
+  active
+  archived
+}
+
+enum StockReason {
+  purchase
+  sale
+  return
+  adjustment
+  loss
+  transfer
+}
+
+model Product {
+  id                     String        @id @default(uuid()) @db.Uuid
+  sku                    String        @unique
+  /// Agrupa variantes de un mismo producto de Shopify (mismo handle = mismo producto).
+  handle                 String
+  title                  String
+  type                   ProductType
+  subcategory            String
+  extraTags              String[]      @default([]) @map("extra_tags")
+  karat                  String        @default("14k")
+  grams                  Decimal       @db.Decimal(8, 2)
+  descriptionHtml        String        @default("") @map("description_html")
+  optionName             String?       @map("option_name")
+  optionValue            String?       @map("option_value")
+  costCents              Int           @map("cost_cents")
+  priceCents             Int           @map("price_cents")
+  priceOverride          Boolean       @default(false) @map("price_override")
+  status                 ProductStatus @default(draft)
+  shopifyProductId       String?       @map("shopify_product_id")
+  shopifyVariantId       String?       @map("shopify_variant_id")
+  shopifyInventoryItemId String?       @map("shopify_inventory_item_id")
+  shopifySyncedAt        DateTime?     @map("shopify_synced_at") @db.Timestamptz(6)
+  driveFolderId          String?       @map("drive_folder_id")
+  barcode                String
+  purchaseItemId         String?       @map("purchase_item_id") @db.Uuid
+  notes                  String?
+  images                 ProductImage[]
+  movements              StockMovement[]
+  createdAt              DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy              String?       @map("created_by") @db.Uuid
+
+  @@index([type])
+  @@index([status])
+  @@index([handle])
+  @@map("products")
+}
+
+model ProductImage {
+  id          String   @id @default(uuid()) @db.Uuid
+  productId   String   @map("product_id") @db.Uuid
+  product     Product  @relation(fields: [productId], references: [id])
+  driveFileId String?  @map("drive_file_id")
+  fileName    String   @map("file_name")
+  publicUrl   String   @map("public_url")
+  position    Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?  @map("created_by") @db.Uuid
+
+  @@unique([productId, fileName])
+  @@map("product_images")
+}
+
+/// El stock actual de un producto es la suma de `qty`. Nunca se edita un campo de stock.
+model StockMovement {
+  id        String      @id @default(uuid()) @db.Uuid
+  productId String      @map("product_id") @db.Uuid
+  product   Product     @relation(fields: [productId], references: [id])
+  qty       Int
+  reason    StockReason
+  reference String?
+  note      String?
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?     @map("created_by") @db.Uuid
+
+  @@index([productId])
+  @@index([reason, createdAt])
+  @@map("stock_movements")
+}
+
+/// Último número usado por tipo para generar SKUs sin colisiones.
+model SkuCounter {
+  type       String   @id
+  lastNumber Int      @default(0) @map("last_number")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy  String?  @map("created_by") @db.Uuid
+
+  @@map("sku_counters")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 2 — Compras
+// ---------------------------------------------------------------------------
+
+enum PurchaseStatus {
+  draft
+  ordered
+  received
+  closed
+}
+
+model Supplier {
+  id           String     @id @default(uuid()) @db.Uuid
+  name         String
+  contact      String?
+  paymentTerms String?    @map("payment_terms")
+  notes        String?
+  active       Boolean    @default(true)
+  purchases    Purchase[]
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy    String?    @map("created_by") @db.Uuid
+
+  @@map("suppliers")
+}
+
+model Purchase {
+  id               String         @id @default(uuid()) @db.Uuid
+  number           Int            @unique @default(autoincrement())
+  supplierId       String         @map("supplier_id") @db.Uuid
+  supplier         Supplier       @relation(fields: [supplierId], references: [id])
+  date             DateTime       @db.Date
+  invoiceNumber    String?        @map("invoice_number")
+  status           PurchaseStatus @default(draft)
+  costPerGramCents Int            @map("cost_per_gram_cents")
+  subtotalCents    Int            @default(0) @map("subtotal_cents")
+  taxCents         Int            @default(0) @map("tax_cents")
+  shippingCents    Int            @default(0) @map("shipping_cents")
+  totalCents       Int            @default(0) @map("total_cents")
+  /// contado | 30 | 30_60 | 30_60_90 | custom
+  paymentTerms     String         @default("contado") @map("payment_terms")
+  notes            String?
+  /// [{ path, name, size }] en el bucket privado purchase-docs
+  attachments      Json           @default("[]")
+  items            PurchaseItem[]
+  payables         Payable[]
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy        String?        @map("created_by") @db.Uuid
+
+  @@index([supplierId])
+  @@index([status])
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id               String      @id @default(uuid()) @db.Uuid
+  purchaseId       String      @map("purchase_id") @db.Uuid
+  purchase         Purchase    @relation(fields: [purchaseId], references: [id])
+  position         Int         @default(1)
+  description      String
+  type             ProductType
+  subcategory      String
+  karat            String      @default("14k")
+  grams            Decimal     @db.Decimal(8, 2)
+  qty              Int
+  qtyReceived      Int         @default(0) @map("qty_received")
+  unitCostCents    Int         @map("unit_cost_cents")
+  unitCostOverride Boolean     @default(false) @map("unit_cost_override")
+  /// El "+" de la línea: dólares (en centavos) que se suman al costo por gramo de la compra.
+  /// base $95/g con +12 → $107/g. Cero cuando la mercadería va a base pelada.
+  premiumCents     Int         @default(0) @map("premium_cents")
+  optionName       String?     @map("option_name")
+  optionValue      String?     @map("option_value")
+  productId        String?     @map("product_id") @db.Uuid
+  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy        String?     @map("created_by") @db.Uuid
+
+  @@index([purchaseId])
+  @@map("purchase_items")
+}
+
+model Payable {
+  id          String    @id @default(uuid()) @db.Uuid
+  purchaseId  String    @map("purchase_id") @db.Uuid
+  purchase    Purchase  @relation(fields: [purchaseId], references: [id])
+  amountCents Int       @map("amount_cents")
+  dueOn       DateTime  @map("due_on") @db.Date
+  paidOn      DateTime? @map("paid_on") @db.Date
+  method      String?
+  note        String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?   @map("created_by") @db.Uuid
+
+  @@index([dueOn])
+  @@index([purchaseId])
+  @@map("payables")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 3 — Gastos
+// ---------------------------------------------------------------------------
+
+enum ExpenseGroup {
+  opening
+  recurring
+}
+
+enum PaymentMethod {
+  company_card
+  cash
+  transfer
+  personal_card_tomas
+  personal_card_nissim
+}
+
+enum ExpenseFrequency {
+  monthly
+  yearly
+}
+
+model ExpenseCategory {
+  id                  String       @id @default(uuid()) @db.Uuid
+  name                String       @unique
+  group               ExpenseGroup
+  /// Grupo de presupuesto de apertura (varias categorías pueden compartirlo)
+  budgetGroup         String?      @map("budget_group")
+  /// Presupuesto mensual del plan (centavos), solo recurrentes
+  monthlyBudgetCents  Int          @default(0) @map("monthly_budget_cents")
+  /// Presupuesto mensual a partir del mes 7 (p. ej. marketing 2,500 → 4,500)
+  monthlyBudgetLaterCents Int?     @map("monthly_budget_later_cents")
+  sort                Int          @default(0)
+  active              Boolean      @default(true)
+  expenses            Expense[]
+  monthlyBudgets      MonthlyBudget[]
+  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy           String?      @map("created_by") @db.Uuid
+
+  @@map("expense_categories")
+}
+
+/// Presupuesto de apertura por grupo (una sola vez).
+model OpeningBudget {
+  group       String   @id
+  amountCents Int      @map("amount_cents")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?  @map("created_by") @db.Uuid
+
+  @@map("opening_budgets")
+}
+
+/// Presupuesto mensual editable por categoría y mes (YYYY-MM). Si no existe, se usa el de la categoría.
+model MonthlyBudget {
+  id          String          @id @default(uuid()) @db.Uuid
+  yearMonth   String          @map("year_month")
+  categoryId  String          @map("category_id") @db.Uuid
+  category    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  amountCents Int             @map("amount_cents")
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?         @map("created_by") @db.Uuid
+
+  @@unique([yearMonth, categoryId])
+  @@map("monthly_budgets")
+}
+
+model Expense {
+  id            String            @id @default(uuid()) @db.Uuid
+  date          DateTime          @db.Date
+  categoryId    String            @map("category_id") @db.Uuid
+  category      ExpenseCategory   @relation(fields: [categoryId], references: [id])
+  vendor        String
+  amountCents   Int               @map("amount_cents")
+  paymentMethod PaymentMethod     @map("payment_method")
+  recurring     Boolean           @default(false)
+  frequency     ExpenseFrequency?
+  notes         String?
+  /// path en el bucket privado `receipts`
+  receiptPath   String?           @map("receipt_path")
+  paid          Boolean           @default(true)
+  reimbursable  Boolean           @default(false)
+  reimbursedOn  DateTime?         @map("reimbursed_on") @db.Date
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy     String?           @map("created_by") @db.Uuid
+
+  @@index([date])
+  @@index([categoryId, date])
+  @@map("expenses")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 4 — Empleados, fichaje y nómina
+// ---------------------------------------------------------------------------
+
+enum PayPeriodStatus {
+  open
+  closed
+  paid
+}
+
+model Employee {
+  id              String          @id @default(uuid()) @db.Uuid
+  name            String
+  pinHash         String          @map("pin_hash")
+  hourlyRateCents Int             @map("hourly_rate_cents")
+  /// Nombre del staff en el POS de Shopify (para ventas por vendedora)
+  shopifyStaffName String?        @map("shopify_staff_name")
+  hiredOn         DateTime?       @map("hired_on") @db.Date
+  active          Boolean         @default(true)
+  phone           String?
+  email           String?
+  notes           String?
+  timeEntries     TimeEntry[]
+  payLines        PayPeriodLine[]
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy       String?         @map("created_by") @db.Uuid
+
+  @@map("employees")
+}
+
+model TimeEntry {
+  id           String    @id @default(uuid()) @db.Uuid
+  employeeId   String    @map("employee_id") @db.Uuid
+  employee     Employee  @relation(fields: [employeeId], references: [id])
+  clockIn      DateTime  @map("clock_in") @db.Timestamptz(6)
+  clockOut     DateTime? @map("clock_out") @db.Timestamptz(6)
+  breakMinutes Int       @default(0) @map("break_minutes")
+  /// uuid del owner que corrigió la entrada (null si la fichó la empleada)
+  editedBy     String?   @map("edited_by") @db.Uuid
+  note         String?
+  /// foto al fichar, en el bucket privado clock-photos
+  photoInPath  String?   @map("photo_in_path")
+  photoOutPath String?   @map("photo_out_path")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy    String?   @map("created_by") @db.Uuid
+
+  @@index([employeeId, clockIn])
+  @@index([clockIn])
+  @@map("time_entries")
+}
+
+model PayPeriod {
+  id        String          @id @default(uuid()) @db.Uuid
+  startsOn  DateTime        @map("starts_on") @db.Date
+  endsOn    DateTime        @map("ends_on") @db.Date
+  status    PayPeriodStatus @default(open)
+  closedAt  DateTime?       @map("closed_at") @db.Timestamptz(6)
+  paidAt    DateTime?       @map("paid_at") @db.Timestamptz(6)
+  lines     PayPeriodLine[]
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?         @map("created_by") @db.Uuid
+
+  @@unique([startsOn, endsOn])
+  @@map("pay_periods")
+}
+
+model PayPeriodLine {
+  id            String    @id @default(uuid()) @db.Uuid
+  payPeriodId   String    @map("pay_period_id") @db.Uuid
+  payPeriod     PayPeriod @relation(fields: [payPeriodId], references: [id])
+  employeeId    String    @map("employee_id") @db.Uuid
+  employee      Employee  @relation(fields: [employeeId], references: [id])
+  regularHours  Decimal   @map("regular_hours") @db.Decimal(6, 2)
+  overtimeHours Decimal   @map("overtime_hours") @db.Decimal(6, 2)
+  rateCents     Int       @map("rate_cents")
+  grossCents    Int       @map("gross_cents")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy     String?   @map("created_by") @db.Uuid
+
+  @@unique([payPeriodId, employeeId])
+  @@map("pay_period_lines")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 5 — Ventas (Shopify web, POS y TikTok)
+// ---------------------------------------------------------------------------
+
+enum SalesChannel {
+  web
+  pos
+  tiktok
+  other
+}
+
+model Customer {
+  id                String   @id @default(uuid()) @db.Uuid
+  shopifyCustomerId String   @unique @map("shopify_customer_id")
+  name              String?
+  email             String?
+  phone             String?
+  ordersCount       Int      @default(0) @map("orders_count")
+  totalSpentCents   Int      @default(0) @map("total_spent_cents")
+  orders            Order[]
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy         String?  @map("created_by") @db.Uuid
+
+  @@map("customers")
+}
+
+model Order {
+  id                String       @id @default(uuid()) @db.Uuid
+  shopifyOrderId    String       @unique @map("shopify_order_id")
+  orderNumber       String       @map("order_number")
+  channel           SalesChannel @default(other)
+  sourceName        String?      @map("source_name")
+  placedAt          DateTime     @map("placed_at") @db.Timestamptz(6)
+  customerId        String?      @map("customer_id") @db.Uuid
+  customer          Customer?    @relation(fields: [customerId], references: [id])
+  customerName      String?      @map("customer_name")
+  subtotalCents     Int          @default(0) @map("subtotal_cents")
+  taxCents          Int          @default(0) @map("tax_cents")
+  discountCents     Int          @default(0) @map("discount_cents")
+  shippingCents     Int          @default(0) @map("shipping_cents")
+  totalCents        Int          @default(0) @map("total_cents")
+  refundedCents     Int          @default(0) @map("refunded_cents")
+  paymentGateway    String?      @map("payment_gateway")
+  financialStatus   String?      @map("financial_status")
+  fulfillmentStatus String?      @map("fulfillment_status")
+  staffName         String?      @map("staff_name")
+  cancelledAt       DateTime?    @map("cancelled_at") @db.Timestamptz(6)
+  raw               Json?
+  items             OrderItem[]
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy         String?      @map("created_by") @db.Uuid
+
+  @@index([placedAt])
+  @@index([channel, placedAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                 String   @id @default(uuid()) @db.Uuid
+  orderId            String   @map("order_id") @db.Uuid
+  order              Order    @relation(fields: [orderId], references: [id])
+  shopifyLineItemId  String   @map("shopify_line_item_id")
+  productId          String?  @map("product_id") @db.Uuid
+  sku                String?
+  title              String
+  qty                Int
+  refundedQty        Int      @default(0) @map("refunded_qty")
+  priceCents         Int      @map("price_cents")
+  discountCents      Int      @default(0) @map("discount_cents")
+  costCentsAtSale    Int?     @map("cost_cents_at_sale")
+  gramsAtSale        Decimal? @map("grams_at_sale") @db.Decimal(8, 2)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy          String?  @map("created_by") @db.Uuid
+
+  @@unique([orderId, shopifyLineItemId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+/// Webhooks recibidos de Shopify: idempotencia por X-Shopify-Webhook-Id.
+model WebhookEvent {
+  id          String    @id @default(uuid()) @db.Uuid
+  webhookId   String    @unique @map("webhook_id")
+  topic       String
+  shopDomain  String?   @map("shop_domain")
+  receivedAt  DateTime  @default(now()) @map("received_at") @db.Timestamptz(6)
+  processedAt DateTime? @map("processed_at") @db.Timestamptz(6)
+  error       String?
+  payload     Json
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?   @map("created_by") @db.Uuid
+
+  @@index([topic, receivedAt])
+  @@map("webhook_events")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 6 — Reportes y regla de parada
+// ---------------------------------------------------------------------------
+
+/// Caja objetivo del plan por mes (1 = mes de apertura … 12).
+model CashTarget {
+  monthIndex  Int      @id @map("month_index")
+  targetCents Int      @map("target_cents")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?  @map("created_by") @db.Uuid
+
+  @@map("cash_targets")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 7 — Extras
+// ---------------------------------------------------------------------------
+
+enum CountStatus {
+  open
+  closed
+}
+
+/// Conteo de inventario físico (escaneo de etiquetas).
+model InventoryCount {
+  id        String               @id @default(uuid()) @db.Uuid
+  status    CountStatus          @default(open)
+  note      String?
+  closedAt  DateTime?            @map("closed_at") @db.Timestamptz(6)
+  lines     InventoryCountLine[]
+  createdAt DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?              @map("created_by") @db.Uuid
+
+  @@map("inventory_counts")
+}
+
+model InventoryCountLine {
+  id        String         @id @default(uuid()) @db.Uuid
+  countId   String         @map("count_id") @db.Uuid
+  count     InventoryCount @relation(fields: [countId], references: [id])
+  productId String         @map("product_id") @db.Uuid
+  counted   Int            @default(0)
+  /// stock del sistema al cerrar el conteo
+  expected  Int?
+  adjusted  Boolean        @default(false)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?        @map("created_by") @db.Uuid
+
+  @@unique([countId, productId])
+  @@map("inventory_count_lines")
+}
+
+enum ClaimStatus {
+  open
+  resolved
+}
+
+/// Garantías y reparaciones (garantía de 1 año publicada en la web).
+model WarrantyClaim {
+  id           String      @id @default(uuid()) @db.Uuid
+  productId    String?     @map("product_id") @db.Uuid
+  sku          String
+  orderNumber  String?     @map("order_number")
+  customerName String?     @map("customer_name")
+  customerContact String?  @map("customer_contact")
+  soldOn       DateTime?   @map("sold_on") @db.Date
+  reportedOn   DateTime    @map("reported_on") @db.Date
+  issue        String
+  resolution   String?
+  costCents    Int         @default(0) @map("cost_cents")
+  status       ClaimStatus @default(open)
+  resolvedOn   DateTime?   @map("resolved_on") @db.Date
+  notes        String?
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy    String?     @map("created_by") @db.Uuid
+
+  @@index([status, reportedOn])
+  @@map("warranty_claims")
+}
+
+/// Precio spot del oro por día (USD por onza troy y por gramo puro).
+model GoldSpot {
+  date            DateTime @id @db.Date
+  usdPerOunceCents Int     @map("usd_per_ounce_cents")
+  usdPerGramCents  Int     @map("usd_per_gram_cents")
+  source          String
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy       String?  @map("created_by") @db.Uuid
+
+  @@map("gold_spot")
+}
+
+/// Backups semanales de la base (JSON en el bucket privado `backups`).
+model Backup {
+  id        String   @id @default(uuid()) @db.Uuid
+  path      String
+  sizeBytes Int      @map("size_bytes")
+  tables    Int
+  rows      Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?  @map("created_by") @db.Uuid
+
+  @@map("backups")
+}
+
+// ---------------------------------------------------------------------------
+// Legal — contratos y documentos
+// ---------------------------------------------------------------------------
+
+enum LegalCategory {
+  lease
+  insurance
+  license
+  supplier
+  employment
+  company
+  tax
+  bank
+  other
+}
+
+enum LegalStatus {
+  draft
+  active
+  expired
+  terminated
+}
+
+/// Contratos y documentos del negocio, con sus archivos en el bucket privado `legal-docs`.
+model LegalDocument {
+  id           String        @id @default(uuid()) @db.Uuid
+  title        String
+  category     LegalCategory
+  status       LegalStatus   @default(active)
+  /// Con quién: locador, aseguradora, proveedor, organismo…
+  counterparty String?
+  /// Número de póliza, licencia, contrato…
+  reference    String?
+  effectiveOn  DateTime?     @map("effective_on") @db.Date
+  expiresOn    DateTime?     @map("expires_on") @db.Date
+  /// Días de aviso previo para renovar o cancelar (aparece en Inicio).
+  noticeDays   Int           @default(30) @map("notice_days")
+  /// Monto asociado en centavos (renta mensual, prima, honorarios). 0 = sin monto.
+  amountCents  Int           @default(0) @map("amount_cents")
+  notes        String?
+  files        LegalFile[]
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy    String?       @map("created_by") @db.Uuid
+
+  @@index([category, status])
+  @@index([expiresOn])
+  @@map("legal_documents")
+}
+
+model LegalFile {
+  id          String        @id @default(uuid()) @db.Uuid
+  documentId  String        @map("document_id") @db.Uuid
+  document    LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  path        String
+  name        String
+  contentType String        @map("content_type")
+  sizeBytes   Int           @map("size_bytes")
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?       @map("created_by") @db.Uuid
+
+  @@index([documentId])
+  @@map("legal_files")
+}

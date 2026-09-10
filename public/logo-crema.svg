@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 0 990 190" role="img" aria-label="minivi">
+  <defs>
+    <clipPath id="xh"><rect x="0" y="50" width="1010" height="130"/></clipPath>
+  </defs>
+  <g fill="none" stroke="#F9F6F0" stroke-width="28" stroke-linecap="butt" stroke-linejoin="miter">
+    <!-- m -->
+    <path d="M30 180 V107 A57 57 0 0 1 144 107 V180 M144 107 A57 57 0 0 1 258 107 V180"/>
+    <!-- i -->
+    <path d="M352 50 V180"/>
+    <!-- n -->
+    <path d="M450 180 V107 A57 57 0 0 1 564 107 V180"/>
+    <!-- i -->
+    <path d="M672 50 V180"/>
+    <!-- v (cortes horizontales por clip) -->
+    <path clip-path="url(#xh)" d="M735.4 30 L829 158 L922.6 30" transform="translate(0 2)"/>
+    <!-- i -->
+    <path d="M982 50 V180"/>
+  </g>
+  <!-- puntos cuadrados -->
+  <g fill="#F9F6F0">
+    <rect x="338" y="8" width="28" height="28"/>
+    <rect x="658" y="8" width="28" height="28"/>
+    <rect x="968" y="8" width="28" height="28"/>
+  </g>
+</svg>

@@ -1,0 +1,125 @@
+# MiniVi OS
+
+Portal interno de MiniVi Jewelry LLC: joyería de oro 14k a precio fijo en North Miami. Un solo negocio, dos dueños, dos vendedoras. Shopify es la fuente de verdad de productos, stock y ventas; este portal agrega lo que Shopify no tiene (compras, gastos, gramos, costo por gramo, nómina, reportes contra el plan).
+
+Reglas de negocio y convenciones: [`CLAUDE.md`](CLAUDE.md). Plan por fases: [`docs/PLAN.md`](docs/PLAN.md). Modelo de datos: [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md). Identidad: [`docs/BRAND.md`](docs/BRAND.md). Setup: [`docs/SETUP.md`](docs/SETUP.md).
+
+## Stack
+
+Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supabase (Postgres, Auth, Storage) · Prisma 7 · Vercel · Vitest.
+
+## Scripts
+
+| comando | qué hace |
+|---|---|
+| `npm run dev` | servidor local |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run test` | Vitest (lógica de negocio) |
+| `npm run lint` | ESLint |
+| `npm run build` | `prisma generate && next build` |
+| `npm run db:migrate -- --name x` | crea y aplica una migración (dev) |
+| `npm run db:deploy` | aplica migraciones pendientes (prod) |
+| `npm run db:seed` | settings por defecto |
+| `npm run db:studio` | Prisma Studio |
+
+## Estado
+
+**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista (unificada con Inventario). **Fase 3 — Gastos:** lista. **Fase 4 — Empleados y nómina:** lista. **Fase 5 — Ventas:** lista. **Fase 6 — Reportes:** lista. **Fase 7 — Extras:** lista para probar (conteo físico con cámara, garantías, precio del oro, metas por vendedora, backups semanales). **Todas las fases del plan están construidas.**
+
+## Cómo probar la fase 0
+
+1. Sin instalar nada: seguir [`docs/GUIA-FACIL.md`](docs/GUIA-FACIL.md) (Supabase + Vercel). Con tu computadora: [`docs/SETUP.md`](docs/SETUP.md).
+2. `npm run dev` y abrir http://localhost:3000.
+3. Entrar con tu email y contraseña → tenés que ver `/app` con el menú (Inicio, Inventario, Ventas, Gastos, Empleados, Legal, Reportes, Configuración). Achicá la ventana o abrilo desde el celular: el menú pasa a un botón arriba a la izquierda.
+4. Ir a **Configuración**, cambiar el precio por gramo (por ejemplo 300 → 310) y guardar. Tiene que aparecer el aviso "Configuración guardada" y una fila nueva en "Historial de cambios" con tu email, el valor anterior y el nuevo. Volver a Inicio: el subtítulo muestra el precio nuevo.
+5. Cerrar sesión desde el menú de usuario (abajo del sidebar) → vuelve a `/login`. Intentar abrir `/app` sin sesión → redirige a `/login`.
+6. Entrar con el usuario de la tablet (uno que **no** esté en `OWNER_EMAILS`) → va a `/kiosk` y no puede abrir `/app`.
+
+## Cómo probar la fase 1
+
+1. Inventario → **Nuevo producto**: título en inglés, tipo, subcategoría, gramos. Al guardar aparece el SKU (`MV-NK-0001`) y el precio automático (gramos × $300, redondeado a $5).
+2. Creá 5 productos. Probá uno con precio manual y una variante (elegí "Es variante de…", valor de opción 18): el SKU sale `MV-NK-0001-18`.
+3. En la ficha → **Ajustar stock** +3. En la lista, el stock y los totales de arriba cambian.
+4. Seleccioná varios → **Etiquetas**: se abre el PDF (una etiqueta por página). Ver `docs/LABELS.md` para imprimir.
+5. **Exportar → CSV para Shopify**: se descarga el archivo con las columnas del importador.
+6. Con Drive configurado (`docs/SETUP-DRIVE.md`): poné una foto `MV-NK-0001.jpg` en la carpeta y apretá **Buscar fotos**.
+7. Con Shopify configurado (`docs/SETUP-SHOPIFY.md`): **Publicar en Shopify** → el producto aparece como borrador en el admin de Shopify con SKU, precio, costo, peso, tags y fotos.
+8. Configuración → cambiá el precio por gramo → **Recalcular precios**: los productos sin precio manual se actualizan y queda en el historial.
+
+## Cómo probar la fase 2
+
+Compras e Inventario son un solo lugar: la mercadería se carga una vez y queda en stock.
+
+1. Inventario → **Proveedores** → **Nuevo proveedor**.
+2. Inventario → **Cargar mercadería**: fecha, proveedor, número de factura y costo por gramo 100 (es la base de esta factura).
+3. Cargá una pieza en **Primera vez**: pide lo mismo que el alta de un producto (título, tipo, subcategoría, kilataje, gramos, talla o largo, tags, descripción) más la cantidad y el **+ por gramo**. El precio al público se calcula solo con los gramos. Agregá otra pieza con un "+" distinto: una en +12 sale a 112/g y otra en +0 queda en 100/g. Bajo el total de cada pieza se ve a cuánto quedó el gramo.
+4. En **Cuándo pagás** ponés las fechas en las que tenés que pagarle al proveedor. Con una sola fecha el monto sigue al total solo; si querés dividir, agregás otra y los montos tienen que sumar el total exacto.
+5. **Guardar entrada** → las piezas ya están en Inventario con SKU, precio y stock, y las fechas están en Cuentas por pagar. No hay que cargar nada dos veces ni confirmar una recepción.
+6. Volvé a **Cargar mercadería** y probá **Reponer**: buscá por SKU o por título una pieza que acabás de crear, poné 3 unidades y un "+" distinto. El stock de esa pieza sube y no aparece un SKU nuevo. Marcá o desmarcá **Actualizar al de esta compra** para decidir si la pieza vieja toma el costo y el precio nuevos.
+7. En la ficha de la entrada: **PDF** abre la orden con el logo para mandarle al proveedor, y podés adjuntar la factura escaneada.
+8. **Cuentas por pagar**: marcá una fecha como pagada. En Inicio aparecen las que vencen en 7 días.
+9. Reportes: costo promedio por gramo del inventario, ponderado por gramos.
+
+## Cómo probar la fase 3
+
+1. Desde el celular: Gastos → sacá la foto de una factura, poné fecha, monto y categoría → **Guardar gasto**. Menos de 30 segundos.
+2. Pagá algo con "Tarjeta personal de Tomas": queda **reembolsable**; después "marcar reembolsado".
+3. **Apertura**: barras de gastado vs presupuesto por grupo del plan (Build-out 34,000, Seguridad 21,100…). Inventario suma las compras.
+4. **Mensual**: matriz de 6 meses; clic en un presupuesto para cambiarlo solo ese mes. Marketing pasa de 2,500 a 4,500 desde el mes 7 (Configuración → mes de apertura).
+5. **Presupuestos**: editar montos del plan.
+6. **CSV contador**: descarga el mes con la columna de reembolsable.
+
+## Cómo probar la fase 4
+
+1. Empleados → **Nueva empleada**: nombre, PIN de 4 dígitos, tarifa por hora. Creá dos.
+2. En la tablet (o en tu celular), entrá con el usuario del kiosco a `/kiosk`. Tecleá el PIN: "Entrada". Volvé a teclearlo: "Salida" con las horas. En Configuración podés activar la foto al fichar.
+3. Empleados: "Fichadas ahora" y la tabla de entradas del período. Corregí una entrada (lápiz) o agregá una manual: queda marcada con ✎ y en el historial.
+4. Nómina: elegí el período, mirá horas normales y extra por empleada. Con una semana de 45 h aparecen 5 h extra. **Cerrar período** → **PDF** y **CSV para payroll** (nombre, regular hours, overtime hours, rate). **Marcar pagado**.
+5. Nómina por mes vs. plan: compara el bruto de los períodos cerrados contra los 7,767 del plan.
+
+## Cómo probar la fase 5
+
+1. Configurar Shopify (`docs/SETUP-SHOPIFY.md`): app custom con scopes de órdenes y clientes, y los 4 webhooks con `SHOPIFY_WEBHOOK_SECRET` en Vercel.
+2. Ventas → **Todo el historial** una vez para traer las órdenes existentes.
+3. Hacé una venta de prueba en Shopify (o en el POS con un SKU del inventario). En menos de 10 segundos aparece en Ventas con su canal, y en Inventario el stock del SKU bajó con un movimiento "Venta".
+4. Hacé una devolución en Shopify: entra un movimiento "Devolución" y el neto se ajusta.
+5. Inicio y Ventas: "Ventas por semana" contra 15 base / 12 conservador / 20 optimista y los umbrales 9.5 y 11.2.
+6. Ventas → **Clientes**: lista con compras y total gastado.
+
+## Cómo probar la fase 6
+
+1. Inicio: ventas por semana vs plan, caja del mes, ventas netas y margen, stock en gramos y dólares, regla de parada, cuentas por pagar próximas, fichadas ahora y últimos gastos.
+2. Configuración: cargá la **caja inicial** (con lo que abrís) y el mes de apertura.
+3. Reportes → tabla "Regla de parada": cargá el objetivo de caja de cada mes (M1 a M12) del plan. La fila se pone en rojo si la caja real queda más de $20,000 por debajo.
+4. **PDF del mes**: ventas por canal, margen, gastos por categoría vs plan, nómina, resultado y caja, con la regla de parada.
+5. **Ventas CSV / Gastos CSV / Nómina CSV**: exports del mes para el contador (también sirven por rango cambiando las fechas en la URL).
+
+## Legal: contratos y documentos
+
+Sección aparte del plan original, agregada para tener todo el papeleo en un solo lugar.
+
+1. **Legal** → **Nuevo documento**: título, categoría (alquiler, seguros, licencias, proveedores, empleados, sociedad, impuestos, banco), con quién, número de póliza o contrato, desde/vence, monto asociado y notas. Podés adjuntar el PDF o sacarle una foto al papel desde el celular.
+2. **Avisarme con X días**: cuando falte ese tiempo para el vencimiento, el documento aparece en Inicio. Para el alquiler conviene 90 días; para una póliza, 30.
+3. La lista marca en amarillo lo que está por vencer, en rojo lo vencido, y avisa cuáles no tienen el archivo subido.
+4. En la ficha se agregan o borran archivos. Los enlaces son privados y duran una hora.
+5. Un documento nunca se borra: se marca **terminado** y queda con su historial.
+
+## Cómo probar la fase 7
+
+1. Inventario → **Conteo físico** → Nuevo conteo. Desde el celular, **Abrir cámara** y apuntá a las etiquetas: cada lectura suma 1. También sirve tipear el SKU o un lector USB. **Terminar conteo** → tabla de faltantes y sobrantes → **Ajustar stock**.
+2. Ventas → **Garantías**: nuevo reclamo por SKU, qué pasó, resolución y costo. Estado abierta/resuelta.
+3. Reportes → "Precio del oro": **Actualizar spot** (o cargar a mano). Muestra el valor a metal del inventario vs costo y avisa si el spot por gramo de 14k se aleja más del 10 % del costo por gramo configurado.
+4. Empleados → editá cada empleada y poné su nombre tal cual figura como staff en el POS de Shopify. Configuración → meta de ventas por período. Nómina muestra ventas por vendedora vs meta.
+5. Configuración → **Backups** → Hacer backup ahora: se descarga un JSON comprimido. El cron lo hace solo los domingos.
+
+## Estructura
+
+```
+src/app/            rutas (login, app/*, kiosk, auth/signout)
+src/components/ui/  shadcn/ui
+src/components/     logo, layout (sidebar, shell)
+src/lib/            prisma, supabase, auth, settings, audit, money
+prisma/             schema y migraciones
+docs/               plan, modelo de datos, marca, setup
+public/             logo.svg, logo-dark.svg, logo-crema.svg, isotipo.svg
+```
