@@ -11,7 +11,7 @@ Decisiones ya tomadas (no se vuelven a discutir): Shopify es la fuente de verdad
 | 2 | Compras | ✅ Lista para probar |
 | 3 | Gastos | ✅ Lista para probar |
 | 4 | Empleados, fichaje y nómina | ✅ Lista para probar |
-| 5 | Ventas (Shopify web, POS y TikTok) | Pendiente |
+| 5 | Ventas (Shopify web, POS y TikTok) | ✅ Lista para probar |
 | 6 | Inicio, reportes y regla de parada | Pendiente |
 | 7 | Extras que Shopify no da | Pendiente |
 
@@ -85,7 +85,7 @@ Modelo: `employees` (PIN hasheado, tarifa por hora), `time_entries`, `pay_period
 
 **Entregable:** dos empleadas fichan dos semanas desde la tablet, cierro el período y sale el PDF.
 
-## Fase 5 — Ventas
+## Fase 5 — Ventas ✅
 
 1. Sincronizar órdenes de Shopify (API + webhooks `orders/create`, `orders/updated`, `refunds/create`) en `orders` y `order_items`, con canal por `source_name` (web, pos, tiktok).
 2. Cada venta genera `stock_movements` de salida; devolución, de entrada. Idempotencia por order id.

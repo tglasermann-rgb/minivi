@@ -49,3 +49,20 @@ Si preferís cargar por el importador de Shopify: en Inventario, seleccioná pro
 - "Shopify respondió 401/403": token inválido o la app no tiene los scopes; volvé a instalar la app después de cambiar permisos.
 - "userErrors: … option values": dos variantes con el mismo valor de opción; revisá que cada variante tenga un valor distinto (16, 18…).
 - Si Shopify avisa que la versión de API venció: cambiá `SHOPIFY_API_VERSION` a una vigente (las versiones duran 12 meses).
+
+## Ventas: webhooks de órdenes (fase 5)
+
+Para que las ventas aparezcan en el portal en segundos:
+
+1. Admin de Shopify → **Settings** → **Notifications** → **Webhooks** (abajo de todo) → **Create webhook**.
+2. Crear cuatro, todos con formato **JSON**, versión de API la misma que `SHOPIFY_API_VERSION`, y URL `https://minivi.vercel.app/api/webhooks/shopify`:
+   - `Order creation` (orders/create)
+   - `Order update` (orders/updated)
+   - `Order cancellation` (orders/cancelled)
+   - `Refund create` (refunds/create)
+3. En esa misma pantalla, abajo, dice "All your webhooks will be signed with **…**": copiá ese texto y cargalo en Vercel como `SHOPIFY_WEBHOOK_SECRET` (Secret, All Environments). Redeploy.
+4. Probar: hacé una venta de prueba en Shopify (o en el POS). En Ventas aparece en segundos con su canal, y el stock del SKU bajó.
+
+Respaldo: un cron diario (`vercel.json`, 10:00 UTC) vuelve a traer lo actualizado por si algún webhook se perdió; el botón **Sincronizar** hace lo mismo a mano, y **Todo el historial** trae todas las órdenes desde el principio (para arrancar).
+
+Canal: se detecta por `source_name` de la orden: `web` → Web, `pos` → Tienda, `tiktok` → TikTok Shop. Vendedora: el staff del POS (si la app tiene el scope `read_users`; si no, queda vacío).

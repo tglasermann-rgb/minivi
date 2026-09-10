@@ -5,6 +5,7 @@ import { formatCents } from "@/lib/money";
 import { upcomingPayables } from "@/lib/purchases/service";
 import { prisma } from "@/lib/prisma";
 import { whoIsIn } from "@/lib/payroll/service";
+import { WeeklyMetric } from "@/components/sales/weekly-metric";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
@@ -29,6 +30,7 @@ export default async function HomePage() {
         title="Hola."
         description={`Precio por gramo vigente: ${formatCents(settings.precio_por_gramo)} · redondeo a ${formatCents(settings.redondeo_precio)}`}
       />
+      <div className="mb-4"><WeeklyMetric compact /></div>
       {payables.length > 0 && (
         <Card className="mb-4 border-oro/60">
           <CardHeader>
@@ -76,7 +78,7 @@ export default async function HomePage() {
             )}
           </CardContent>
         </Card>
-        {CARDS.filter((c) => c.phase !== 2 && c.phase !== 3 && c.phase !== 4).map((c) => (
+        {CARDS.filter((c) => c.phase === 6 || c.phase === 1).map((c) => (
           <Card key={c.title} className="min-h-36">
             <CardHeader>
               <CardTitle>{c.title}</CardTitle>

@@ -24,7 +24,7 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 
 ## Estado
 
-**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista. **Fase 3 — Gastos:** lista. **Fase 4 — Empleados y nómina:** lista para probar (kiosco con PIN en la tablet, foto opcional, corrección de entradas con historial, períodos 1–15 y 16–fin, hora extra 1.5× sobre 40 h/semana, cierre con PDF y CSV para el proveedor de nómina, nómina por mes vs plan).
+**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista. **Fase 3 — Gastos:** lista. **Fase 4 — Empleados y nómina:** lista. **Fase 5 — Ventas:** lista para probar (órdenes de Shopify por API y webhooks, canal web/POS/TikTok, stock automático por venta y devolución, ventas por semana contra el plan en Inicio, clientes).
 
 ## Cómo probar la fase 0
 
@@ -71,6 +71,15 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 3. Empleados: "Fichadas ahora" y la tabla de entradas del período. Corregí una entrada (lápiz) o agregá una manual: queda marcada con ✎ y en el historial.
 4. Nómina: elegí el período, mirá horas normales y extra por empleada. Con una semana de 45 h aparecen 5 h extra. **Cerrar período** → **PDF** y **CSV para payroll** (nombre, regular hours, overtime hours, rate). **Marcar pagado**.
 5. Nómina por mes vs. plan: compara el bruto de los períodos cerrados contra los 7,767 del plan.
+
+## Cómo probar la fase 5
+
+1. Configurar Shopify (`docs/SETUP-SHOPIFY.md`): app custom con scopes de órdenes y clientes, y los 4 webhooks con `SHOPIFY_WEBHOOK_SECRET` en Vercel.
+2. Ventas → **Todo el historial** una vez para traer las órdenes existentes.
+3. Hacé una venta de prueba en Shopify (o en el POS con un SKU del inventario). En menos de 10 segundos aparece en Ventas con su canal, y en Inventario el stock del SKU bajó con un movimiento "Venta".
+4. Hacé una devolución en Shopify: entra un movimiento "Devolución" y el neto se ajusta.
+5. Inicio y Ventas: "Ventas por semana" contra 15 base / 12 conservador / 20 optimista y los umbrales 9.5 y 11.2.
+6. Ventas → **Clientes**: lista con compras y total gastado.
 
 ## Estructura
 

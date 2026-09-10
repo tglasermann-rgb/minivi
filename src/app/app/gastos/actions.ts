@@ -10,10 +10,15 @@ const fail = (e: unknown): ActionResult<never> => ({ ok: false, error: e instanc
 
 function parseForm(fd: FormData) {
   const obj: Record<string, unknown> = {};
-  for (const k of ["date", "categoryId", "vendor", "amount", "paymentMethod", "frequency", "notes"]) obj[k] = fd.get(k) ?? "";
-  obj.recurring = fd.get("recurring") === "on" || fd.get("recurring") === "true";
-  obj.paid = fd.get("paid") !== "off" && fd.get("paid") !== "false";
-  obj.reimbursable = fd.get("reimbursable") === "on" || fd.get("reimbursable") === "true";
+  for (const k of ["date", "categoryId", "vendor", "amount", "paymentMethod", "notes"]) obj[k] = fd.get(k) ?? "";
+  // Checkboxes: si no están marcados no vienen en el FormData.
+  const on = (k: string) => { const v = fd.get(k); return v === "on" || v === "true"; };
+  obj.recurring = on("recurring");
+  obj.paid = on("paid");
+  obj.reimbursable = on("reimbursable");
+  // La frecuencia solo se muestra si es recurrente; si no viene, mensual.
+  const freq = fd.get("frequency");
+  obj.frequency = freq === "yearly" ? "yearly" : "monthly";
   return expenseSchema.safeParse(obj);
 }
 
