@@ -53,6 +53,12 @@ Versión paso a paso sin comandos: [`docs/GUIA-FACIL.md`](GUIA-FACIL.md).
 
 Se crean solos la primera vez que se usan: `product-images` (público, fotos de producto), `receipts` (privado, facturas de gastos), `purchase-docs` (privado), `clock-photos` (privado, fichaje), `backups` (privado) y `legal-docs` (privado, contratos y documentos).
 
+## Región: el servidor va junto a la base
+
+`vercel.json` fija la región de Vercel en **pdx1** (Portland) porque el proyecto de Supabase está en **us-west-2** (Oregón). Cada pantalla hace varias consultas y una llamada de sesión; con el servidor del otro lado del país cada una costaba unos 65 ms y el portal se sentía lento.
+
+Si algún día se crea el proyecto de Supabase en otra región, hay que mover `regions` a la ciudad de Vercel más cercana: `us-east-1` → `iad1`, `us-west-1` → `sfo1`, `eu-central-1` → `fra1`, `sa-east-1` → `gru1`. La región de Supabase se ve en el host de `DATABASE_URL` (`aws-0-<región>.pooler.supabase.com`).
+
 ## Diagnóstico
 
 `GET /api/health` (sin sesión) devuelve si la base responde, cuánto tarda, y qué variables de entorno están cargadas (sin exponer valores). Es lo primero que hay que mirar ante un "Application error".

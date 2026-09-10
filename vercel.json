@@ -3,7 +3,7 @@
   "buildCommand": "npm run build:vercel",
   "framework": "nextjs",
   "regions": [
-    "iad1"
+    "pdx1"
   ],
   "crons": [
     {
