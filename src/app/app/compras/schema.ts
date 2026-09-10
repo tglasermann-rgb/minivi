@@ -8,6 +8,8 @@ export const purchaseLineSchema = z.object({
   karat: z.enum(KARATS),
   grams: z.coerce.number().positive("> 0"),
   qty: z.coerce.number().int().min(1, "≥ 1"),
+  /** el "+" de la línea, en dólares por gramo sobre la base de la compra */
+  premium: z.coerce.number().min(0, "≥ 0").max(1000, "demasiado alto").default(0),
   unitCost: z.coerce.number().min(0).optional().or(z.nan().transform(() => undefined)),
   optionName: z.string().trim().max(30).optional().or(z.literal("")),
   optionValue: z.string().trim().max(20).optional().or(z.literal("")),

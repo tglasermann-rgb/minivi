@@ -15,6 +15,18 @@ export function computePriceCents(grams: number, pricePerGramCents: number, roun
   return Math.ceil(rawCents / roundingCents) * roundingCents;
 }
 
+/**
+ * El "+" de una compra son dólares por gramo que se suman a la base:
+ * base $95/g con +12 son $107/g. Cada línea de la compra puede tener el suyo,
+ * así una pulsera va a +10 y otra a +12 dentro de la misma orden.
+ *
+ * @param basePerGramCents  costo por gramo de la compra, ej. 9500
+ * @param premiumCents      el "+", ej. 1200. Negativo o nulo cuenta como cero.
+ */
+export function costPerGramWithPremium(basePerGramCents: number, premiumCents?: number | null): number {
+  return basePerGramCents + Math.max(0, Math.round(premiumCents ?? 0));
+}
+
 /** Costo = gramos × costo por gramo (centavos), redondeado al centavo. */
 export function computeCostCents(grams: number, costPerGramCents: number): number {
   if (!(grams > 0)) return 0;

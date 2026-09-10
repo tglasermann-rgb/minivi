@@ -16,6 +16,7 @@ describe.skipIf(!url)("compras (integración)", () => {
   let svc: typeof import("./service");
   let prisma: typeof import("@/lib/prisma").prisma;
   let supplierId: string;
+  let premiumPurchaseId: string;
 
   beforeAll(async () => {
     svc = await import("./service");
@@ -71,8 +72,53 @@ describe.skipIf(!url)("compras (integración)", () => {
     expect(avg.avgCentsPerGram).toBe(10000);
   });
 
+  it("cada línea aplica su propio \"+\" sobre la base de la compra", async () => {
+    // Base $95/g. Una pulsera a +10, otra a +12, una cadena a base pelada
+    // y un dije con precio cerrado a mano.
+    const p = await svc.createPurchase({
+      supplierId, date: new Date("2026-09-05T00:00:00Z"), costPerGramCents: 9500,
+      taxCents: 0, shippingCents: 0, paymentTerms: "contado",
+      items: [
+        { description: "Miami Bracelet 5mm", type: "bracelet", subcategory: "bangles", karat: "14k", grams: 10, qty: 1, premiumCents: 1000 },
+        { description: "Rope Bracelet 4mm", type: "bracelet", subcategory: "bangles", karat: "14k", grams: 10, qty: 1, premiumCents: 1200 },
+        { description: "Figaro Chain 3mm", type: "necklace", subcategory: "chains", karat: "14k", grams: 10, qty: 1, premiumCents: 0 },
+        { description: "Heart Pendant", type: "pendant", subcategory: "pendants", karat: "14k", grams: 10, qty: 1, premiumCents: 2000, unitCostCents: 50000 },
+      ],
+    });
+    premiumPurchaseId = p.id;
+    const full = await prisma.purchase.findUniqueOrThrow({ where: { id: p.id }, include: { items: { orderBy: { position: "asc" } } } });
+    const [a, b, c, d] = full.items;
+    expect(a.unitCostCents).toBe(105000); // 10 g × (95 + 10)
+    expect(b.unitCostCents).toBe(107000); // 10 g × (95 + 12)
+    expect(c.unitCostCents).toBe(95000);  // 10 g × 95, sin +
+    expect(d.unitCostCents).toBe(50000);  // precio cerrado: el + no se aplica
+    expect(d.unitCostOverride).toBe(true);
+    expect([a, b, c, d].map((x) => x.premiumCents)).toEqual([1000, 1200, 0, 2000]);
+    expect(full.subtotalCents).toBe(105000 + 107000 + 95000 + 50000);
+
+    // Editar conserva el "+" de cada línea y recalcula si cambia la base.
+    await svc.updatePurchase(p.id, {
+      supplierId, date: new Date("2026-09-05T00:00:00Z"), costPerGramCents: 10000,
+      taxCents: 0, shippingCents: 0, paymentTerms: "contado",
+      items: full.items.map((x) => ({
+        description: x.description, type: x.type, subcategory: x.subcategory, karat: x.karat,
+        grams: Number(x.grams), qty: x.qty, premiumCents: x.premiumCents,
+        unitCostCents: x.unitCostOverride ? x.unitCostCents : null,
+      })),
+    });
+    const after = await prisma.purchase.findUniqueOrThrow({ where: { id: p.id }, include: { items: { orderBy: { position: "asc" } } } });
+    expect(after.items.map((x) => x.unitCostCents)).toEqual([110000, 112000, 100000, 50000]);
+  });
+
+  it("el producto recibido queda con el costo que incluye su \"+\"", async () => {
+    const p = await prisma.purchase.findUniqueOrThrow({ where: { id: premiumPurchaseId }, include: { items: { orderBy: { position: "asc" } } } });
+    await svc.receivePurchase(p.id, [{ itemId: p.items[1].id, qty: 1 }]);
+    const prod = await prisma.product.findFirstOrThrow({ where: { purchaseItemId: p.items[1].id } });
+    expect(prod.costCents).toBe(112000); // 10 g × (100 + 12)
+  });
+
   it("no edita compras con recepciones", async () => {
-    const p = await prisma.purchase.findFirstOrThrow();
+    const p = await prisma.purchase.findFirstOrThrow({ where: { id: { not: premiumPurchaseId } } });
     await expect(svc.updatePurchase(p.id, { supplierId, date: new Date(), costPerGramCents: 1, taxCents: 0, shippingCents: 0, paymentTerms: "contado", items: [] })).rejects.toThrow();
   });
 });

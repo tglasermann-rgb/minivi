@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeCostCents, computePriceCents, resolvePriceCents } from "./pricing";
+import { computeCostCents, computePriceCents, costPerGramWithPremium, resolvePriceCents } from "./pricing";
 
 describe("precio automático", () => {
   it("gramos × $300 redondeado hacia arriba a $5", () => {
@@ -37,5 +37,38 @@ describe("precio automático", () => {
     expect(resolvePriceCents({ grams: 2.1, priceOverride: true, overridePriceCents: 59900, pricePerGramCents: 30000, roundingCents: 500 })).toBe(59900);
     expect(resolvePriceCents({ grams: 2.1, priceOverride: false, overridePriceCents: 59900, pricePerGramCents: 30000, roundingCents: 500 })).toBe(63000);
     expect(() => resolvePriceCents({ grams: 2.1, priceOverride: true, pricePerGramCents: 30000, roundingCents: 500 })).toThrow();
+  });
+});
+
+describe("el \"+\" de la compra", () => {
+  it("suma dólares por gramo sobre la base", () => {
+    // base $95/g
+    expect(costPerGramWithPremium(9500, 0)).toBe(9500);
+    expect(costPerGramWithPremium(9500, 800)).toBe(10300);
+    expect(costPerGramWithPremium(9500, 1000)).toBe(10500);
+    expect(costPerGramWithPremium(9500, 1200)).toBe(10700);
+    expect(costPerGramWithPremium(9500, 2000)).toBe(11500);
+  });
+
+  it("sin + la compra vale lo mismo que antes", () => {
+    expect(costPerGramWithPremium(10000)).toBe(10000);
+    expect(costPerGramWithPremium(10000, null)).toBe(10000);
+  });
+
+  it("un + negativo no abarata la mercadería", () => {
+    expect(costPerGramWithPremium(9500, -500)).toBe(9500);
+  });
+
+  it("una pulsera de 10 g a base 95 con +12 sale $1,070.00", () => {
+    expect(computeCostCents(10, costPerGramWithPremium(9500, 1200))).toBe(107000);
+  });
+
+  it("dos líneas de la misma compra con + distinto no se pisan", () => {
+    const base = 9500;
+    const pulseraA = computeCostCents(8.35, costPerGramWithPremium(base, 1000)); // +10 → $105/g
+    const pulseraB = computeCostCents(8.35, costPerGramWithPremium(base, 1200)); // +12 → $107/g
+    expect(pulseraA).toBe(87675);
+    expect(pulseraB).toBe(89345);
+    expect(pulseraB - pulseraA).toBe(1670); // 8.35 g × $2
   });
 });

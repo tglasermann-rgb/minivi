@@ -49,7 +49,7 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 ## Cómo probar la fase 2
 
 1. Compras → **Proveedores** → **Nuevo proveedor**.
-2. Compras → **Nueva compra**: costo por gramo 100, condiciones 30/60/90, 20 líneas (o menos, con cantidad). Abajo se ven el total y las tres cuotas con fecha. Crear.
+2. Compras → **Nueva compra**: costo por gramo 100 (es la base), condiciones 30/60/90, 20 líneas (o menos, con cantidad). En cada línea, **+ por g** son los dólares que se suman a la base de esa compra: una línea en +12 sale a 112/g y otra en +0 queda en 100/g. Bajo el total de cada línea se ve a cuánto quedó el gramo. Abajo se ven el total y las tres cuotas con fecha. Crear.
 3. En la ficha: **PDF** abre la orden con el logo para mandar al proveedor. **Estado → Pedida**.
 4. **Recibir mercadería**: confirmá las cantidades. Aparecen los SKU en cada línea; en Inventario están los productos con precio automático y stock. Probá recibir parcial primero (menos unidades) y después el resto.
 5. **Cuentas por pagar**: tres cuotas pendientes; marcá una como pagada. En Inicio aparecen las que vencen en 7 días.

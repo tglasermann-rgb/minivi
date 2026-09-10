@@ -4,7 +4,8 @@ Portal interno para administrar MiniVi Jewelry LLC, una joyería de oro 14k a pr
 
 ## Reglas de negocio que nunca cambian
 - El precio de venta se calcula como gramos × precio por gramo (parámetro global, hoy $300/g), redondeado hacia arriba al múltiplo de $5. Se puede sobrescribir por pieza.
-- El costo se calcula como gramos × costo por gramo de la compra (hoy ~$100/g). Cada compra tiene su propio costo por gramo.
+- El costo se calcula como gramos × costo por gramo de la compra (hoy ~$100/g). Cada compra tiene su propio costo por gramo, que es la base.
+- Cada línea de una compra tiene su propio "+": dólares por gramo que se suman a la base de esa compra. Base $95/g con +12 son $107/g. Los habituales son +0, +8, +10, +12 y +20, pero se puede escribir cualquiera. En una misma compra una pulsera puede ir a +10 y otra a +12. Si la línea tiene costo unitario manual, ese precio manda y el "+" no se aplica.
 - Nunca escribir "solid gold" en ningún texto que salga al público. Usar "real 14k gold", "stamped 14k", "no plating".
 - Shopify es la fuente de verdad de productos publicados, stock y ventas. El portal lee y escribe por Admin API; no inventa un segundo stock.
 - SKU: `MV-<TIPO>-<NNNN>` (NK necklace, BR bracelet, ER earring, RG ring, CH charm, PD pendant), con sufijo de variante si hay (`-16`, `-18` para largos; `-6`, `-7` para tallas). Inmutable una vez creado.

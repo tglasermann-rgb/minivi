@@ -70,7 +70,7 @@ En fases siguientes se agregan acá: `drive_root_folder_id`, `shopify_location_i
 | grams | numeric(8,2) | |
 | description_html | text | inglés, nunca "solid gold" |
 | option_name / option_value | text? | Length / Size |
-| cost_cents | int | gramos × costo por gramo de la compra |
+| cost_cents | int | gramos × (costo por gramo de la compra + el "+" de la línea) |
 | price_cents | int | gramos × precio_por_gramo redondeado |
 | price_override | bool | si true no se recalcula |
 | status | enum draft \| active \| archived | |
@@ -95,7 +95,7 @@ En fases siguientes se agregan acá: `drive_root_folder_id`, `shopify_location_i
 
 - **suppliers**: name, contact, payment_terms (text), notes, active.
 - **purchases**: supplier_id FK, date, invoice_number, status draft \| ordered \| received \| closed, cost_per_gram_cents, subtotal_cents, tax_cents, shipping_cents, total_cents, payment_terms (`cash` \| `30_60_90` \| json con cuotas), notes, attachments (bucket `purchase-docs`).
-- **purchase_items**: purchase_id FK, description, type, subcategory, karat, grams, qty, qty_received, unit_cost_cents (= grams × cost_per_gram salvo override), product_id FK? (se crea al recibir).
+- **purchase_items**: purchase_id FK, description, type, subcategory, karat, grams, qty, qty_received, unit_cost_cents (= grams × (cost_per_gram + premium_cents) salvo override), premium_cents (el "+" de la línea, en centavos por gramo sobre la base de la compra), product_id FK? (se crea al recibir).
 - **payables**: purchase_id FK, amount_cents, due_on, paid_on?, method?. Se generan según condiciones.
 
 ---

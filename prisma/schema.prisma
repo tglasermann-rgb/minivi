@@ -240,6 +240,9 @@ model PurchaseItem {
   qtyReceived      Int         @default(0) @map("qty_received")
   unitCostCents    Int         @map("unit_cost_cents")
   unitCostOverride Boolean     @default(false) @map("unit_cost_override")
+  /// El "+" de la línea: dólares (en centavos) que se suman al costo por gramo de la compra.
+  /// base $95/g con +12 → $107/g. Cero cuando la mercadería va a base pelada.
+  premiumCents     Int         @default(0) @map("premium_cents")
   optionName       String?     @map("option_name")
   optionValue      String?     @map("option_value")
   productId        String?     @map("product_id") @db.Uuid

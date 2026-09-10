@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { audit } from "@/lib/audit";
 import { getCurrentUser } from "@/lib/auth";
 import { createProduct } from "@/lib/inventory/service";
-import { computeCostCents } from "@/lib/inventory/pricing";
+import { computeCostCents, costPerGramWithPremium } from "@/lib/inventory/pricing";
 import type { Prisma, ProductType, PurchaseStatus } from "@/generated/prisma/client";
 import { buildInstallments, purchaseTotals, type Installment, type PaymentTerms } from "./terms";
 
@@ -14,8 +14,10 @@ export type PurchaseLineInput = {
   karat: string;
   grams: number;
   qty: number;
-  /** costo unitario manual (centavos); si falta, gramos × costo por gramo de la compra */
+  /** costo unitario manual (centavos); si falta, gramos × (costo por gramo + el "+" de la línea) */
   unitCostCents?: number | null;
+  /** el "+" de la línea en centavos por gramo: +12 → 1200. Cero es base pelada. */
+  premiumCents?: number | null;
   optionName?: string | null;
   optionValue?: string | null;
 };
@@ -34,13 +36,14 @@ export type PurchaseInput = {
 };
 
 function lineCost(costPerGramCents: number, l: PurchaseLineInput) {
-  return l.unitCostCents != null && l.unitCostCents >= 0 ? l.unitCostCents : computeCostCents(l.grams, costPerGramCents);
+  if (l.unitCostCents != null && l.unitCostCents >= 0) return l.unitCostCents;
+  return computeCostCents(l.grams, costPerGramWithPremium(costPerGramCents, l.premiumCents));
 }
 
 export async function createPurchase(input: PurchaseInput) {
   if (input.items.length === 0) throw new Error("La compra necesita al menos una línea");
   const user = await getCurrentUser();
-  const lines = input.items.map((l, i) => ({ ...l, position: i + 1, unitCostCents: lineCost(input.costPerGramCents, l), unitCostOverride: l.unitCostCents != null }));
+  const lines = input.items.map((l, i) => ({ ...l, position: i + 1, premiumCents: Math.max(0, Math.round(l.premiumCents ?? 0)), unitCostCents: lineCost(input.costPerGramCents, l), unitCostOverride: l.unitCostCents != null }));
   const { subtotalCents, totalCents } = purchaseTotals(lines, input.taxCents, input.shippingCents);
   const installments = buildInstallments(totalCents, input.paymentTerms, input.date, input.customInstallments);
 
@@ -68,6 +71,7 @@ export async function createPurchase(input: PurchaseInput) {
           qty: l.qty,
           unitCostCents: l.unitCostCents,
           unitCostOverride: l.unitCostOverride,
+          premiumCents: l.premiumCents,
           optionName: l.optionName || null,
           optionValue: l.optionValue || null,
           createdBy: user?.id ?? null,
@@ -87,7 +91,7 @@ export async function updatePurchase(id: string, input: PurchaseInput) {
   if (before.items.some((i) => i.qtyReceived > 0)) throw new Error("Ya hay líneas recibidas: no se puede editar la compra");
   if (before.payables.some((p) => p.paidOn)) throw new Error("Ya hay cuotas pagadas: no se pueden regenerar las cuentas por pagar");
   const user = await getCurrentUser();
-  const lines = input.items.map((l, i) => ({ ...l, position: i + 1, unitCostCents: lineCost(input.costPerGramCents, l), unitCostOverride: l.unitCostCents != null }));
+  const lines = input.items.map((l, i) => ({ ...l, position: i + 1, premiumCents: Math.max(0, Math.round(l.premiumCents ?? 0)), unitCostCents: lineCost(input.costPerGramCents, l), unitCostOverride: l.unitCostCents != null }));
   const { subtotalCents, totalCents } = purchaseTotals(lines, input.taxCents, input.shippingCents);
   const installments = buildInstallments(totalCents, input.paymentTerms, input.date, input.customInstallments);
 
@@ -110,7 +114,7 @@ export async function updatePurchase(id: string, input: PurchaseInput) {
         items: {
           create: lines.map((l) => ({
             position: l.position, description: l.description.trim(), type: l.type, subcategory: l.subcategory, karat: l.karat, grams: l.grams, qty: l.qty,
-            unitCostCents: l.unitCostCents, unitCostOverride: l.unitCostOverride, optionName: l.optionName || null, optionValue: l.optionValue || null, createdBy: user?.id ?? null,
+            unitCostCents: l.unitCostCents, unitCostOverride: l.unitCostOverride, premiumCents: l.premiumCents, optionName: l.optionName || null, optionValue: l.optionValue || null, createdBy: user?.id ?? null,
           })),
         },
         payables: { create: installments.map((c) => ({ amountCents: c.amountCents, dueOn: c.dueOn, createdBy: user?.id ?? null })) },

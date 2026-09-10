@@ -108,3 +108,17 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+@layer utilities {
+  /* Campos numéricos angostos: sin las flechitas del navegador, que se comen
+     el ancho y hacen que un clic al centro caiga sobre el spinner. */
+  .no-spinner::-webkit-outer-spin-button,
+  .no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .no-spinner {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}

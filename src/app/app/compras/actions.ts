@@ -32,6 +32,7 @@ function toInput(v: PurchaseFormValues) {
       grams: l.grams,
       qty: l.qty,
       unitCostCents: l.unitCost != null ? parseDollarsToCents(l.unitCost) : null,
+      premiumCents: parseDollarsToCents(l.premium),
       optionName: l.optionName || null,
       optionValue: l.optionValue || null,
     })),

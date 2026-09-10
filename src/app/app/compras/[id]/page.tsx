@@ -36,7 +36,7 @@ export default async function CompraPage({ params }: { params: Promise<{ id: str
       <PageHeader
         eyebrow={`${p.supplier.name} · ${dateFmt.format(p.date)}`}
         title={`PO-${String(p.number).padStart(4, "0")}`}
-        description={`${TERMS_LABELS[p.paymentTerms as PaymentTerms] ?? p.paymentTerms} · costo ${formatCents(p.costPerGramCents)}/g${p.invoiceNumber ? ` · factura ${p.invoiceNumber}` : ""}`}
+        description={`${TERMS_LABELS[p.paymentTerms as PaymentTerms] ?? p.paymentTerms} · base ${formatCents(p.costPerGramCents)}/g${p.invoiceNumber ? ` · factura ${p.invoiceNumber}` : ""}`}
         actions={
           <>
             <Button asChild variant="outline"><a href={`/api/compras?id=${p.id}`} target="_blank" rel="noreferrer"><FileTextIcon /> PDF</a></Button>
@@ -72,6 +72,7 @@ export default async function CompraPage({ params }: { params: Promise<{ id: str
             notes: p.notes ?? "",
             items: p.items.map((i) => ({
               description: i.description, type: i.type, subcategory: i.subcategory as never, karat: i.karat as never, grams: i.grams, qty: i.qty,
+              premium: i.premiumCents / 100,
               unitCost: i.unitCostOverride ? i.unitCostCents / 100 : undefined, optionName: i.optionName ?? "", optionValue: i.optionValue ?? "",
             })),
           }}
@@ -81,7 +82,7 @@ export default async function CompraPage({ params }: { params: Promise<{ id: str
           <CardHeader><CardTitle>Líneas</CardTitle><CardDescription>La compra ya tiene recepciones o pagos: no se edita.</CardDescription></CardHeader>
           <CardContent>
             <Table>
-              <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Descripción</TableHead><TableHead>Tipo</TableHead><TableHead className="text-right">Gramos</TableHead><TableHead className="text-right">Cant.</TableHead><TableHead className="text-right">Recibido</TableHead><TableHead className="text-right">Costo unit.</TableHead><TableHead className="text-right">Total</TableHead><TableHead>SKU</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Descripción</TableHead><TableHead>Tipo</TableHead><TableHead className="text-right">Gramos</TableHead><TableHead className="text-right">Cant.</TableHead><TableHead className="text-right">Recibido</TableHead><TableHead className="text-right">+ por g</TableHead><TableHead className="text-right">Costo unit.</TableHead><TableHead className="text-right">Total</TableHead><TableHead>SKU</TableHead></TableRow></TableHeader>
               <TableBody>
                 {p.items.map((i) => (
                   <TableRow key={i.id}>
@@ -91,7 +92,13 @@ export default async function CompraPage({ params }: { params: Promise<{ id: str
                     <TableCell className="text-right font-mono text-xs">{i.grams.toFixed(2)}</TableCell>
                     <TableCell className="text-right font-mono text-xs">{i.qty}</TableCell>
                     <TableCell className={`text-right font-mono text-xs ${i.qtyReceived < i.qty ? "text-oro-profundo" : ""}`}>{i.qtyReceived}</TableCell>
-                    <TableCell className="text-right font-mono text-xs">{formatCents(i.unitCostCents)}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {i.unitCostOverride ? <span className="text-muted-foreground">manual</span> : i.premiumCents > 0 ? `+${formatCents(i.premiumCents)}` : <span className="text-muted-foreground">base</span>}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {formatCents(i.unitCostCents)}
+                      {!i.unitCostOverride && <span className="block text-[10px] text-muted-foreground">{formatCents(p.costPerGramCents + i.premiumCents)}/g</span>}
+                    </TableCell>
                     <TableCell className="text-right font-mono text-xs">{formatCents(i.unitCostCents * i.qty)}</TableCell>
                     <TableCell className="font-mono text-xs">{i.productId && i.sku ? <Link href={`/app/inventario/${i.productId}`} className="text-oro-profundo hover:underline">{i.sku}</Link> : "—"}</TableCell>
                   </TableRow>
