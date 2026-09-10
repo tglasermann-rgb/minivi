@@ -547,3 +547,18 @@ model WebhookEvent {
   @@index([topic, receivedAt])
   @@map("webhook_events")
 }
+
+// ---------------------------------------------------------------------------
+// Fase 6 — Reportes y regla de parada
+// ---------------------------------------------------------------------------
+
+/// Caja objetivo del plan por mes (1 = mes de apertura … 12).
+model CashTarget {
+  monthIndex  Int      @id @map("month_index")
+  targetCents Int      @map("target_cents")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?  @map("created_by") @db.Uuid
+
+  @@map("cash_targets")
+}

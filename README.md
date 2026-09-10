@@ -24,7 +24,7 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 
 ## Estado
 
-**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista. **Fase 3 — Gastos:** lista. **Fase 4 — Empleados y nómina:** lista. **Fase 5 — Ventas:** lista para probar (órdenes de Shopify por API y webhooks, canal web/POS/TikTok, stock automático por venta y devolución, ventas por semana contra el plan en Inicio, clientes).
+**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista. **Fase 3 — Gastos:** lista. **Fase 4 — Empleados y nómina:** lista. **Fase 5 — Ventas:** lista. **Fase 6 — Inicio, reportes y regla de parada:** lista para probar (dashboard completo, reporte mensual en PDF contra el plan, caja real vs objetivo con alerta roja, export contable CSV de ventas, gastos y nómina).
 
 ## Cómo probar la fase 0
 
@@ -80,6 +80,14 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 4. Hacé una devolución en Shopify: entra un movimiento "Devolución" y el neto se ajusta.
 5. Inicio y Ventas: "Ventas por semana" contra 15 base / 12 conservador / 20 optimista y los umbrales 9.5 y 11.2.
 6. Ventas → **Clientes**: lista con compras y total gastado.
+
+## Cómo probar la fase 6
+
+1. Inicio: ventas por semana vs plan, caja del mes, ventas netas y margen, stock en gramos y dólares, regla de parada, cuentas por pagar próximas, fichadas ahora y últimos gastos.
+2. Configuración: cargá la **caja inicial** (con lo que abrís) y el mes de apertura.
+3. Reportes → tabla "Regla de parada": cargá el objetivo de caja de cada mes (M1 a M12) del plan. La fila se pone en rojo si la caja real queda más de $20,000 por debajo.
+4. **PDF del mes**: ventas por canal, margen, gastos por categoría vs plan, nómina, resultado y caja, con la regla de parada.
+5. **Ventas CSV / Gastos CSV / Nómina CSV**: exports del mes para el contador (también sirven por rango cambiando las fechas en la URL).
 
 ## Estructura
 

@@ -12,7 +12,7 @@ Decisiones ya tomadas (no se vuelven a discutir): Shopify es la fuente de verdad
 | 3 | Gastos | ✅ Lista para probar |
 | 4 | Empleados, fichaje y nómina | ✅ Lista para probar |
 | 5 | Ventas (Shopify web, POS y TikTok) | ✅ Lista para probar |
-| 6 | Inicio, reportes y regla de parada | Pendiente |
+| 6 | Inicio, reportes y regla de parada | ✅ Lista para probar |
 | 7 | Extras que Shopify no da | Pendiente |
 
 Orden sugerido: 0 → 1 (para cuando llegue la mercadería) → 3 (ya hay gastos) → 2 y 4 (antes de abrir) → 5 y 6 (primera semana con la tienda abierta) → 7.
@@ -95,7 +95,7 @@ Modelo: `employees` (PIN hasheado, tarifa por hora), `time_entries`, `pay_period
 
 **Entregable:** venta de prueba en Shopify aparece en 10 segundos con su canal y el stock del SKU bajó.
 
-## Fase 6 — Inicio, reportes y regla de parada
+## Fase 6 — Inicio, reportes y regla de parada ✅
 
 1. Dashboard completo.
 2. Reporte mensual en PDF contra el escenario base.

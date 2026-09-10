@@ -6,21 +6,18 @@ import { upcomingPayables } from "@/lib/purchases/service";
 import { prisma } from "@/lib/prisma";
 import { whoIsIn } from "@/lib/payroll/service";
 import { WeeklyMetric } from "@/components/sales/weekly-metric";
+import { monthReport, stockSnapshot, stopRule } from "@/lib/reports/service";
+import { yearMonthOf, monthLabel } from "@/lib/expenses/budget";
+import { Stat } from "@/components/ui/stat";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-
-const CARDS = [
-  { title: "Ventas de la semana", description: "Contra el plan: 15 base · 12 conservador · 20 optimista", phase: 5 },
-  { title: "Caja del mes", description: "Ventas cobradas − gastos − nómina − pagos a proveedores", phase: 6 },
-  { title: "Stock", description: "Piezas, gramos y valor al público", phase: 1 },
-  { title: "Cuentas por pagar", description: "Vencimientos de los próximos 7 días", phase: 2 },
-  { title: "Fichados ahora", description: "Empleadas con entrada abierta", phase: 4 },
-  { title: "Últimos gastos", description: "Los 5 más recientes", phase: 3 },
-];
 
 export default async function HomePage() {
   const [settings, payables, lastExpenses, inNow] = await Promise.all([getSettings(), upcomingPayables(7), prisma.expense.findMany({ include: { category: true }, orderBy: [{ date: "desc" }, { createdAt: "desc" }], take: 5 }), whoIsIn()]);
   const timeFmt = new Intl.DateTimeFormat("es-US", { hour: "2-digit", minute: "2-digit", timeZone: settings.tienda_timezone });
+  const month = yearMonthOf(new Date(), settings.tienda_timezone);
+  const [report, stock, rule] = await Promise.all([monthReport(month), stockSnapshot(), stopRule()]);
+  const stopRow = rule.rows.find((x) => x.month === month);
   const today = new Date(); today.setUTCHours(0, 0, 0, 0);
   const dateFmt = new Intl.DateTimeFormat("es-US", { dateStyle: "medium", timeZone: "UTC" });
   return (
@@ -31,6 +28,12 @@ export default async function HomePage() {
         description={`Precio por gramo vigente: ${formatCents(settings.precio_por_gramo)} · redondeo a ${formatCents(settings.redondeo_precio)}`}
       />
       <div className="mb-4"><WeeklyMetric compact /></div>
+      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label={`Caja de ${monthLabel(month)}`} value={formatCents(report.cashFlowCents)} hint="ventas − gastos − nómina − proveedores" className={report.cashFlowCents < 0 ? "border-destructive/50" : ""} />
+        <Stat label="Ventas netas del mes" value={formatCents(report.salesNetCents)} hint={`${report.salesOrders} órdenes · margen ${formatCents(report.marginCents)}`} />
+        <Stat label="Stock" value={`${stock.grams.toFixed(0)} g`} hint={`${stock.pieces} piezas · costo ${formatCents(stock.costCents)} · público ${formatCents(stock.priceCents)}`} />
+        <Stat label="Regla de parada" value={stopRow && stopRow.status !== "future" ? formatCents(stopRow.deltaCents) : "—"} hint={stopRow && stopRow.status !== "future" ? `caja real ${formatCents(stopRow.cashCents)} vs objetivo ${formatCents(stopRow.targetCents)}` : "antes de la apertura"} className={stopRow?.status === "red" ? "border-destructive" : stopRow?.status === "warn" ? "border-oro" : ""} />
+      </div>
       {payables.length > 0 && (
         <Card className="mb-4 border-oro/60">
           <CardHeader>
@@ -78,18 +81,6 @@ export default async function HomePage() {
             )}
           </CardContent>
         </Card>
-        {CARDS.filter((c) => c.phase === 6 || c.phase === 1).map((c) => (
-          <Card key={c.title} className="min-h-36">
-            <CardHeader>
-              <CardTitle>{c.title}</CardTitle>
-              <CardDescription>{c.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="mt-auto">
-              <p className="font-mono text-2xl text-arena">—</p>
-              <p className="mt-1 text-xs text-muted-foreground">Fase {c.phase}</p>
-            </CardContent>
-          </Card>
-        ))}
       </div>
     </>
   );

@@ -20,6 +20,8 @@ export default async function ConfiguracionPage() {
     tienda_timezone: s.tienda_timezone,
     apertura_mes: s.apertura_mes,
     kiosk_foto: (s.kiosk_foto === "si" ? "si" : "no") as "si" | "no",
+    caja_inicial: Number(centsToDollarsString(s.caja_inicial)),
+    regla_parada_umbral: Number(centsToDollarsString(s.regla_parada_umbral)),
     drive_root_folder_id: s.drive_root_folder_id,
     shopify_location_id: s.shopify_location_id,
   };

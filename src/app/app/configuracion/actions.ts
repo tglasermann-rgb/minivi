@@ -41,6 +41,8 @@ export async function updateSettings(input: unknown): Promise<ActionResult> {
     tienda_timezone: v.tienda_timezone,
     apertura_mes: v.apertura_mes,
     kiosk_foto: v.kiosk_foto,
+    caja_inicial: String(parseDollarsToCents(v.caja_inicial)),
+    regla_parada_umbral: String(parseDollarsToCents(v.regla_parada_umbral)),
     drive_root_folder_id: v.drive_root_folder_id,
     shopify_location_id: v.shopify_location_id,
   };

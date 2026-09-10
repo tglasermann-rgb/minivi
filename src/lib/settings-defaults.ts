@@ -24,6 +24,10 @@ export const SETTING_DEFAULTS = {
   ventas_semana_optimista: 20,
   ventas_semana_cubre_gastos: 9.5,
   ventas_semana_cubre_gastos_y_banco: 11.2,
+  /** Caja con la que se abre (centavos): punto de partida de la caja real. */
+  caja_inicial: 0,
+  /** Regla de parada: rojo si la caja real está más de este monto (centavos) por debajo del objetivo. */
+  regla_parada_umbral: 2000000,
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;

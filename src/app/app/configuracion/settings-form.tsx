@@ -169,6 +169,31 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormVal
 
         <Card>
           <CardHeader>
+            <CardTitle>Plan y regla de parada</CardTitle>
+            <CardDescription>La caja objetivo por mes se carga en Reportes.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <FormField control={form.control} name="caja_inicial" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Caja inicial (USD)</FormLabel>
+                <FormControl><Input type="number" step="0.01" min="0" className="font-mono" {...field} /></FormControl>
+                <FormDescription>Con lo que se abre. Punto de partida de la caja real.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="regla_parada_umbral" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Umbral de la regla de parada (USD)</FormLabel>
+                <FormControl><Input type="number" step="0.01" min="0" className="font-mono" {...field} /></FormControl>
+                <FormDescription>Rojo si la caja real está más de este monto por debajo del objetivo (plan: 20,000).</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Integraciones</CardTitle>
             <CardDescription>Las claves van en Vercel (variables de entorno). Acá solo los identificadores.</CardDescription>
           </CardHeader>
