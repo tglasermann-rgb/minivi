@@ -17,7 +17,7 @@ export async function saveEmployeeAction(id: string | null, input: unknown): Pro
   if (!parsed.success) return { ok: false, error: "Revisá los campos.", fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> };
   const v = parsed.data;
   try {
-    await saveEmployee(id, { name: v.name, pin: v.pin || null, hourlyRateCents: parseDollarsToCents(v.hourlyRate), hiredOn: v.hiredOn ? new Date(`${v.hiredOn}T00:00:00Z`) : null, active: v.active, phone: v.phone || null, email: v.email || null, notes: v.notes || null });
+    await saveEmployee(id, { name: v.name, pin: v.pin || null, hourlyRateCents: parseDollarsToCents(v.hourlyRate), hiredOn: v.hiredOn ? new Date(`${v.hiredOn}T00:00:00Z`) : null, active: v.active, phone: v.phone || null, email: v.email || null, notes: v.notes || null, shopifyStaffName: v.shopifyStaffName || null });
     paths();
     return { ok: true, message: "Empleada guardada" };
   } catch (e) { return fail(e); }

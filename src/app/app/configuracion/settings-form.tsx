@@ -181,6 +181,14 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormVal
                 <FormMessage />
               </FormItem>
             )} />
+            <FormField control={form.control} name="meta_ventas_periodo" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Meta de ventas por vendedora por período (USD)</FormLabel>
+                <FormControl><Input type="number" step="0.01" min="0" className="font-mono" {...field} /></FormControl>
+                <FormDescription>Se compara con las ventas del POS por vendedora en cada período de nómina. 0 = sin meta.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
             <FormField control={form.control} name="regla_parada_umbral" render={({ field }) => (
               <FormItem>
                 <FormLabel>Umbral de la regla de parada (USD)</FormLabel>

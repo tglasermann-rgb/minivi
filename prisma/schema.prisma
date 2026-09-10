@@ -378,6 +378,8 @@ model Employee {
   name            String
   pinHash         String          @map("pin_hash")
   hourlyRateCents Int             @map("hourly_rate_cents")
+  /// Nombre del staff en el POS de Shopify (para ventas por vendedora)
+  shopifyStaffName String?        @map("shopify_staff_name")
   hiredOn         DateTime?       @map("hired_on") @db.Date
   active          Boolean         @default(true)
   phone           String?
@@ -561,4 +563,100 @@ model CashTarget {
   createdBy   String?  @map("created_by") @db.Uuid
 
   @@map("cash_targets")
+}
+
+// ---------------------------------------------------------------------------
+// Fase 7 — Extras
+// ---------------------------------------------------------------------------
+
+enum CountStatus {
+  open
+  closed
+}
+
+/// Conteo de inventario físico (escaneo de etiquetas).
+model InventoryCount {
+  id        String               @id @default(uuid()) @db.Uuid
+  status    CountStatus          @default(open)
+  note      String?
+  closedAt  DateTime?            @map("closed_at") @db.Timestamptz(6)
+  lines     InventoryCountLine[]
+  createdAt DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?              @map("created_by") @db.Uuid
+
+  @@map("inventory_counts")
+}
+
+model InventoryCountLine {
+  id        String         @id @default(uuid()) @db.Uuid
+  countId   String         @map("count_id") @db.Uuid
+  count     InventoryCount @relation(fields: [countId], references: [id])
+  productId String         @map("product_id") @db.Uuid
+  counted   Int            @default(0)
+  /// stock del sistema al cerrar el conteo
+  expected  Int?
+  adjusted  Boolean        @default(false)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?        @map("created_by") @db.Uuid
+
+  @@unique([countId, productId])
+  @@map("inventory_count_lines")
+}
+
+enum ClaimStatus {
+  open
+  resolved
+}
+
+/// Garantías y reparaciones (garantía de 1 año publicada en la web).
+model WarrantyClaim {
+  id           String      @id @default(uuid()) @db.Uuid
+  productId    String?     @map("product_id") @db.Uuid
+  sku          String
+  orderNumber  String?     @map("order_number")
+  customerName String?     @map("customer_name")
+  customerContact String?  @map("customer_contact")
+  soldOn       DateTime?   @map("sold_on") @db.Date
+  reportedOn   DateTime    @map("reported_on") @db.Date
+  issue        String
+  resolution   String?
+  costCents    Int         @default(0) @map("cost_cents")
+  status       ClaimStatus @default(open)
+  resolvedOn   DateTime?   @map("resolved_on") @db.Date
+  notes        String?
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy    String?     @map("created_by") @db.Uuid
+
+  @@index([status, reportedOn])
+  @@map("warranty_claims")
+}
+
+/// Precio spot del oro por día (USD por onza troy y por gramo puro).
+model GoldSpot {
+  date            DateTime @id @db.Date
+  usdPerOunceCents Int     @map("usd_per_ounce_cents")
+  usdPerGramCents  Int     @map("usd_per_gram_cents")
+  source          String
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy       String?  @map("created_by") @db.Uuid
+
+  @@map("gold_spot")
+}
+
+/// Backups semanales de la base (JSON en el bucket privado `backups`).
+model Backup {
+  id        String   @id @default(uuid()) @db.Uuid
+  path      String
+  sizeBytes Int      @map("size_bytes")
+  tables    Int
+  rows      Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String?  @map("created_by") @db.Uuid
+
+  @@map("backups")
 }

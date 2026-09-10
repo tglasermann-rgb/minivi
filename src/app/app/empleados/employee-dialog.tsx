@@ -11,13 +11,13 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { saveEmployeeAction } from "./actions";
 
-type E = { id?: string; name: string; pin: string; hourlyRate: string; hiredOn: string; active: boolean; phone: string; email: string; notes: string };
+type E = { id?: string; name: string; pin: string; hourlyRate: string; hiredOn: string; active: boolean; phone: string; email: string; notes: string; shopifyStaffName?: string };
 
 export function EmployeeDialog({ employee }: { employee?: E }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
-  const [v, setV] = useState<E>(employee ?? { name: "", pin: "", hourlyRate: "", hiredOn: "", active: true, phone: "", email: "", notes: "" });
+  const [v, setV] = useState<E>(employee ?? { name: "", pin: "", hourlyRate: "", hiredOn: "", active: true, phone: "", email: "", notes: "", shopifyStaffName: "" });
   const save = () => start(async () => {
     const r = await saveEmployeeAction(employee?.id ?? null, v);
     if (r.ok) { toast.success(r.message ?? "Guardado"); setOpen(false); router.refresh(); }
@@ -42,6 +42,7 @@ export function EmployeeDialog({ employee }: { employee?: E }) {
             <div className="grid gap-1"><Label>Teléfono</Label><Input value={v.phone} onChange={(e) => setV({ ...v, phone: e.target.value })} /></div>
           </div>
           <div className="grid gap-1"><Label>Email</Label><Input type="email" value={v.email} onChange={(e) => setV({ ...v, email: e.target.value })} /></div>
+          <div className="grid gap-1"><Label>Nombre en el POS de Shopify</Label><Input value={v.shopifyStaffName ?? ""} onChange={(e) => setV({ ...v, shopifyStaffName: e.target.value })} placeholder="tal cual figura como staff en Shopify" /></div>
           <div className="grid gap-1"><Label>Notas</Label><Textarea rows={2} value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} /></div>
           <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">Activa <Switch checked={v.active} onCheckedChange={(c) => setV({ ...v, active: c })} /></label>
         </div>

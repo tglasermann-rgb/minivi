@@ -24,7 +24,7 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 
 ## Estado
 
-**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista. **Fase 3 — Gastos:** lista. **Fase 4 — Empleados y nómina:** lista. **Fase 5 — Ventas:** lista. **Fase 6 — Inicio, reportes y regla de parada:** lista para probar (dashboard completo, reporte mensual en PDF contra el plan, caja real vs objetivo con alerta roja, export contable CSV de ventas, gastos y nómina).
+**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista. **Fase 3 — Gastos:** lista. **Fase 4 — Empleados y nómina:** lista. **Fase 5 — Ventas:** lista. **Fase 6 — Reportes:** lista. **Fase 7 — Extras:** lista para probar (conteo físico con cámara, garantías, precio del oro, metas por vendedora, backups semanales). **Todas las fases del plan están construidas.**
 
 ## Cómo probar la fase 0
 
@@ -88,6 +88,14 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 3. Reportes → tabla "Regla de parada": cargá el objetivo de caja de cada mes (M1 a M12) del plan. La fila se pone en rojo si la caja real queda más de $20,000 por debajo.
 4. **PDF del mes**: ventas por canal, margen, gastos por categoría vs plan, nómina, resultado y caja, con la regla de parada.
 5. **Ventas CSV / Gastos CSV / Nómina CSV**: exports del mes para el contador (también sirven por rango cambiando las fechas en la URL).
+
+## Cómo probar la fase 7
+
+1. Inventario → **Conteo físico** → Nuevo conteo. Desde el celular, **Abrir cámara** y apuntá a las etiquetas: cada lectura suma 1. También sirve tipear el SKU o un lector USB. **Terminar conteo** → tabla de faltantes y sobrantes → **Ajustar stock**.
+2. Ventas → **Garantías**: nuevo reclamo por SKU, qué pasó, resolución y costo. Estado abierta/resuelta.
+3. Reportes → "Precio del oro": **Actualizar spot** (o cargar a mano). Muestra el valor a metal del inventario vs costo y avisa si el spot por gramo de 14k se aleja más del 10 % del costo por gramo configurado.
+4. Empleados → editá cada empleada y poné su nombre tal cual figura como staff en el POS de Shopify. Configuración → meta de ventas por período. Nómina muestra ventas por vendedora vs meta.
+5. Configuración → **Backups** → Hacer backup ahora: se descarga un JSON comprimido. El cron lo hace solo los domingos.
 
 ## Estructura
 

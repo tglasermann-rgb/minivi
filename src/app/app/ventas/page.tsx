@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { UsersIcon } from "lucide-react";
+import { ShieldCheckIcon, UsersIcon } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +65,7 @@ export default async function VentasPage() {
         eyebrow="Ventas"
         title="Ventas"
         description={shopifyConfigured() ? `Órdenes de Shopify (web, tienda y TikTok). Última sincronización: ${last ? dt.format(last) : "nunca"}. Los webhooks las traen en tiempo real.` : "Shopify no está configurado todavía: ver docs/SETUP-SHOPIFY.md."}
-        actions={<><Button asChild variant="outline"><Link href="/app/ventas/clientes"><UsersIcon /> Clientes</Link></Button><SyncButton failedWebhooks={failed} /></>}
+        actions={<><Button asChild variant="outline"><Link href="/app/ventas/garantias"><ShieldCheckIcon /> Garantías</Link></Button><Button asChild variant="outline"><Link href="/app/ventas/clientes"><UsersIcon /> Clientes</Link></Button><SyncButton failedWebhooks={failed} /></>}
       />
       <div className="mb-6"><WeeklyMetric /></div>
       <Tabs defaultValue="week">

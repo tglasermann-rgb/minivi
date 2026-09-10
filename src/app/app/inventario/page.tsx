@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, ScanBarcodeIcon } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Stat } from "@/components/ui/stat";
@@ -31,9 +31,10 @@ export default async function InventarioPage({ searchParams }: { searchParams: P
         title="Productos"
         description="El stock es la suma de movimientos. Shopify es la fuente de verdad de lo publicado."
         actions={
-          <Button asChild variant="gold">
-            <Link href="/app/inventario/nuevo"><PlusIcon /> Nuevo producto</Link>
-          </Button>
+          <>
+            <Button asChild variant="outline"><Link href="/app/inventario/conteo"><ScanBarcodeIcon /> Conteo físico</Link></Button>
+            <Button asChild variant="gold"><Link href="/app/inventario/nuevo"><PlusIcon /> Nuevo producto</Link></Button>
+          </>
         }
       />
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">

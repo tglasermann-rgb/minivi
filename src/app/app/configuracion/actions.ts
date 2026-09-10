@@ -19,7 +19,7 @@ export async function listShopifyLocationsAction(): Promise<ActionResult & { loc
   }
 }
 
-export type ActionResult = { ok: true } | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
+export type ActionResult = { ok: true; message?: string } | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
 
 export async function updateSettings(input: unknown): Promise<ActionResult> {
   const user = await requireOwner();
@@ -42,6 +42,7 @@ export async function updateSettings(input: unknown): Promise<ActionResult> {
     apertura_mes: v.apertura_mes,
     kiosk_foto: v.kiosk_foto,
     caja_inicial: String(parseDollarsToCents(v.caja_inicial)),
+    meta_ventas_periodo: String(parseDollarsToCents(v.meta_ventas_periodo)),
     regla_parada_umbral: String(parseDollarsToCents(v.regla_parada_umbral)),
     drive_root_folder_id: v.drive_root_folder_id,
     shopify_location_id: v.shopify_location_id,
@@ -67,4 +68,24 @@ export async function updateSettings(input: unknown): Promise<ActionResult> {
 
   revalidatePath("/app", "layout");
   return { ok: true };
+}
+
+export async function backupNowAction(): Promise<ActionResult> {
+  await requireOwner();
+  try {
+    const { runBackup } = await import("@/lib/extras/backup");
+    const b = await runBackup("manual");
+    revalidatePath("/app/configuracion/backups");
+    return { ok: true, message: `Backup listo: ${b.rows} filas, ${(b.sizeBytes / 1024).toFixed(0)} KB` };
+  } catch (e) { return { ok: false, error: e instanceof Error ? e.message : String(e) }; }
+}
+
+export async function refreshGoldSpotAction(manualUsdPerOunce?: number): Promise<ActionResult> {
+  await requireOwner();
+  try {
+    const { refreshSpot, recordSpot } = await import("@/lib/extras/gold");
+    const row = manualUsdPerOunce && manualUsdPerOunce > 0 ? await recordSpot(manualUsdPerOunce, "manual") : await refreshSpot();
+    revalidatePath("/app/reportes"); revalidatePath("/app");
+    return { ok: true, message: `Spot: $${(row.usdPerOunceCents / 100).toFixed(2)}/oz (${row.source})` };
+  } catch (e) { return { ok: false, error: e instanceof Error ? e.message : String(e) }; }
 }

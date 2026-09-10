@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Stat } from "@/components/ui/stat";
 import { formatCents } from "@/lib/money";
-import { currentPeriod, listPeriods, payrollByMonth, previewPeriod } from "@/lib/payroll/service";
+import { currentPeriod, listPeriods, payrollByMonth, previewPeriod, salesByEmployee } from "@/lib/payroll/service";
 import { nextPeriod, periodFor, periodLabel, prevPeriod, utcToKey } from "@/lib/payroll/periods";
 import { addMonths, monthLabel, yearMonthOf } from "@/lib/expenses/budget";
 import { getSettings } from "@/lib/settings";
@@ -20,7 +20,7 @@ export default async function NominaPage({ searchParams }: { searchParams: Promi
   const { p } = await searchParams;
   const s = await getSettings();
   const period = p && /^\d{4}-\d{2}-\d{2}$/.test(p) ? periodFor(p) : prevPeriod(await currentPeriod());
-  const [preview, periods] = await Promise.all([previewPeriod(period), listPeriods()]);
+  const [preview, periods, goals] = await Promise.all([previewPeriod(period), listPeriods(), salesByEmployee(period)]);
   const closed = periods.find((x) => utcToKey(x.startsOn) === period.start);
   const thisMonth = yearMonthOf(new Date(), s.tienda_timezone);
   const months = Array.from({ length: 6 }, (_, i) => addMonths(thisMonth, i - 5));
@@ -64,6 +64,27 @@ export default async function NominaPage({ searchParams }: { searchParams: Promi
                   <TableCell className={`text-right font-mono text-xs ${l.overtimeHours ? "text-oro-profundo" : ""}`}>{l.overtimeHours.toFixed(2)}</TableCell>
                   <TableCell className="text-right font-mono text-xs">{formatCents(l.rateCents)}</TableCell>
                   <TableCell className="text-right font-mono">{formatCents(l.grossCents)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader><CardTitle>Ventas por vendedora en el período</CardTitle><CardDescription>Órdenes del POS de Shopify por nombre de staff (se carga en cada empleada). Meta por período en Configuración; sirve para un bono futuro.</CardDescription></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader><TableRow><TableHead>Empleada</TableHead><TableHead>Staff en Shopify</TableHead><TableHead className="text-right">Órdenes</TableHead><TableHead className="text-right">Piezas</TableHead><TableHead className="text-right">Ventas</TableHead><TableHead className="text-right">Meta</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {goals.map((g) => (
+                <TableRow key={g.employeeId}>
+                  <TableCell>{g.name}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{g.staffName ?? "sin vincular"}</TableCell>
+                  <TableCell className="text-right font-mono text-xs">{g.orders}</TableCell>
+                  <TableCell className="text-right font-mono text-xs">{g.units}</TableCell>
+                  <TableCell className="text-right font-mono text-xs">{formatCents(g.netCents)}</TableCell>
+                  <TableCell className={`text-right font-mono text-xs ${g.pct != null && g.pct >= 100 ? "text-emerald-700" : ""}`}>{g.goalCents ? `${g.pct}% de ${formatCents(g.goalCents)}` : "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

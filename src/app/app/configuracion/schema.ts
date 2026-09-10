@@ -10,6 +10,7 @@ export const settingsFormSchema = z.object({
   overtime_umbral_horas: z.coerce.number().int().min(1).max(80),
   kiosk_foto: z.enum(["si", "no"]).default("no"),
   caja_inicial: z.coerce.number().min(0).default(0),
+  meta_ventas_periodo: z.coerce.number().min(0).default(0),
   regla_parada_umbral: z.coerce.number().min(0).default(20000),
   apertura_mes: z.string().regex(/^\d{4}-\d{2}$/, "Formato AAAA-MM"),
   drive_root_folder_id: z.string().trim().max(200).default(""),

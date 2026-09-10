@@ -12,6 +12,8 @@ import { addMonths, monthLabel, yearMonthOf } from "@/lib/expenses/budget";
 import { inventoryAverageCostPerGram } from "@/lib/purchases/service";
 import { monthReport, stopRule } from "@/lib/reports/service";
 import { TargetCell } from "./targets-editor";
+import { metalValuation } from "@/lib/extras/gold";
+import { GoldSpotButton } from "./gold-button";
 
 export const metadata = { title: "Reportes" };
 export const dynamic = "force-dynamic";
@@ -20,7 +22,8 @@ export default async function ReportesPage({ searchParams }: { searchParams: Pro
   const { m } = await searchParams;
   const s = await getSettings();
   const month = m && /^\d{4}-\d{2}$/.test(m) ? m : yearMonthOf(new Date(), s.tienda_timezone);
-  const [r, rule, avg] = await Promise.all([monthReport(month), stopRule(), inventoryAverageCostPerGram()]);
+  const [r, rule, avg, metal] = await Promise.all([monthReport(month), stopRule(), inventoryAverageCostPerGram(), metalValuation()]);
+  const spotDate = metal.spot ? new Intl.DateTimeFormat("es-US", { dateStyle: "medium", timeZone: "UTC" }).format(metal.spot.date) : null;
   const stopRow = rule.rows.find((x) => x.month === month);
   const from = `${month}-01`;
   const to = `${addMonths(month, 1)}-01`;
@@ -99,6 +102,24 @@ export default async function ReportesPage({ searchParams }: { searchParams: Pro
               ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card className={`mt-6 ${metal.alert ? "border-oro" : ""}`}>
+        <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <CardTitle>Precio del oro y valor a metal</CardTitle>
+              <CardDescription>{metal.spot ? `Spot ${formatCents(metal.spot.usdPerOunceCents)}/oz (${metal.spot.source}, ${spotDate}) = ${formatCents(metal.spot.usdPerGramCents)}/g puro.` : "Sin spot cargado todavía: se actualiza solo cada día, o apretá el botón."}</CardDescription>
+            </div>
+            <GoldSpotButton />
+          </div>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat label="Oro puro en stock" value={`${metal.pureGrams.toFixed(2)} g`} hint={`${metal.grams.toFixed(2)} g de 14k`} />
+          <Stat label="Valor a metal" value={metal.metalValueCents != null ? formatCents(metal.metalValueCents) : "—"} hint={`costo ${formatCents(metal.costCents)}`} />
+          <Stat label="Spot por gramo de 14k" value={metal.spotPerGram14k != null ? `${formatCents(metal.spotPerGram14k)}/g` : "—"} hint={`compra configurada ${formatCents(metal.costPerGramDefault)}/g`} />
+          <Stat label="Desvío vs costo de compra" value={metal.deviationPct != null ? `${metal.deviationPct > 0 ? "+" : ""}${metal.deviationPct}%` : "—"} hint={metal.alert ? "Revisá el costo por gramo de la próxima compra" : "dentro del rango"} className={metal.alert ? "border-oro" : ""} />
         </CardContent>
       </Card>
 

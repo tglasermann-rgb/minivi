@@ -21,7 +21,7 @@ export const CLOCK_PHOTOS_BUCKET = "clock-photos";
 // Empleados
 // ---------------------------------------------------------------------------
 
-export type EmployeeInput = { name: string; pin?: string | null; hourlyRateCents: number; hiredOn?: Date | null; active: boolean; phone?: string | null; email?: string | null; notes?: string | null };
+export type EmployeeInput = { name: string; pin?: string | null; hourlyRateCents: number; hiredOn?: Date | null; active: boolean; phone?: string | null; email?: string | null; notes?: string | null; shopifyStaffName?: string | null };
 
 export async function saveEmployee(id: string | null, input: EmployeeInput) {
   const user = await getCurrentUser();
@@ -30,7 +30,7 @@ export async function saveEmployee(id: string | null, input: EmployeeInput) {
     const others = await prisma.employee.findMany({ where: { active: true, ...(id ? { id: { not: id } } : {}) }, select: { pinHash: true } });
     if (others.some((o) => verifyPin(input.pin!, o.pinHash))) throw new Error("Ese PIN ya lo usa otra empleada. Elegí otro.");
   }
-  const base = { name: input.name.trim(), hourlyRateCents: input.hourlyRateCents, hiredOn: input.hiredOn ?? null, active: input.active, phone: input.phone || null, email: input.email || null, notes: input.notes || null };
+  const base = { name: input.name.trim(), hourlyRateCents: input.hourlyRateCents, hiredOn: input.hiredOn ?? null, active: input.active, phone: input.phone || null, email: input.email || null, notes: input.notes || null, shopifyStaffName: input.shopifyStaffName || null };
   if (id) {
     const before = await prisma.employee.findUniqueOrThrow({ where: { id } });
     const after = await prisma.employee.update({ where: { id }, data: { ...base, ...(input.pin ? { pinHash: hashPin(input.pin) } : {}) } });
@@ -264,6 +264,23 @@ export async function payrollByMonth(months: string[]) {
     out.push({ month: m, grossCents, budgetCents: cat ? monthlyBudgetFor(cat, m, s.apertura_mes) : 0 });
   }
   return out;
+}
+
+/** Ventas del POS por vendedora en un período (por shopify_staff_name), contra la meta. */
+export async function salesByEmployee(period: Period) {
+  const s = await getSettings();
+  const from = keyToUtc(period.start);
+  const to = keyToUtc(addDaysKey(period.end, 1));
+  const [employees, orders] = await Promise.all([
+    prisma.employee.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
+    prisma.order.findMany({ where: { placedAt: { gte: from, lt: to }, cancelledAt: null, staffName: { not: null } }, include: { items: { select: { qty: true, refundedQty: true } } } }),
+  ]);
+  return employees.map((e) => {
+    const mine = orders.filter((o) => e.shopifyStaffName && o.staffName?.trim().toLowerCase() === e.shopifyStaffName.trim().toLowerCase());
+    const netCents = mine.reduce((a, o) => a + o.totalCents - o.refundedCents, 0);
+    const units = mine.reduce((a, o) => a + o.items.reduce((b, i) => b + i.qty - i.refundedQty, 0), 0);
+    return { employeeId: e.id, name: e.name, staffName: e.shopifyStaffName, orders: mine.length, units, netCents, goalCents: s.meta_ventas_periodo, pct: s.meta_ventas_periodo ? Math.round((netCents / s.meta_ventas_periodo) * 100) : null };
+  });
 }
 
 export { prevPeriod };

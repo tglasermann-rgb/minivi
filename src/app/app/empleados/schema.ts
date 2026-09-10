@@ -9,6 +9,7 @@ export const employeeSchema = z.object({
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   email: z.string().trim().email().optional().or(z.literal("")),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  shopifyStaffName: z.string().trim().max(120).optional().or(z.literal("")),
 });
 export type EmployeeFormInput = z.input<typeof employeeSchema>;
 

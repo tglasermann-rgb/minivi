@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { getSettings } from "@/lib/settings";
 import { centsToDollarsString } from "@/lib/money";
@@ -21,6 +22,7 @@ export default async function ConfiguracionPage() {
     apertura_mes: s.apertura_mes,
     kiosk_foto: (s.kiosk_foto === "si" ? "si" : "no") as "si" | "no",
     caja_inicial: Number(centsToDollarsString(s.caja_inicial)),
+    meta_ventas_periodo: Number(centsToDollarsString(s.meta_ventas_periodo)),
     regla_parada_umbral: Number(centsToDollarsString(s.regla_parada_umbral)),
     drive_root_folder_id: s.drive_root_folder_id,
     shopify_location_id: s.shopify_location_id,
@@ -30,6 +32,7 @@ export default async function ConfiguracionPage() {
     <>
       <PageHeader eyebrow="Configuración" title="Parámetros del negocio" description="Todo cambio queda registrado en el historial." />
       <SettingsForm defaultValues={defaults} />
+      <p className="mt-4 text-sm text-muted-foreground"><Link href="/app/configuracion/backups" className="text-oro-profundo hover:underline">Backups de la base</Link></p>
       <AuditRecent entity="settings" />
     </>
   );

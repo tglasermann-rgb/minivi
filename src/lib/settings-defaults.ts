@@ -28,6 +28,12 @@ export const SETTING_DEFAULTS = {
   caja_inicial: 0,
   /** Regla de parada: rojo si la caja real está más de este monto (centavos) por debajo del objetivo. */
   regla_parada_umbral: 2000000,
+  /** Meta de ventas por vendedora por período de nómina (centavos). 0 = sin meta. */
+  meta_ventas_periodo: 0,
+  /** Pureza del kilataje por defecto para valuar el inventario a spot (14k = 0.585). */
+  pureza_14k: 0.585,
+  /** Aviso si el spot por gramo de 14k se aleja más de este % del costo por gramo configurado. */
+  spot_alerta_pct: 10,
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;

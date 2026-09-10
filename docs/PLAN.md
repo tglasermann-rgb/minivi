@@ -13,7 +13,7 @@ Decisiones ya tomadas (no se vuelven a discutir): Shopify es la fuente de verdad
 | 4 | Empleados, fichaje y nómina | ✅ Lista para probar |
 | 5 | Ventas (Shopify web, POS y TikTok) | ✅ Lista para probar |
 | 6 | Inicio, reportes y regla de parada | ✅ Lista para probar |
-| 7 | Extras que Shopify no da | Pendiente |
+| 7 | Extras que Shopify no da | ✅ Lista para probar |
 
 Orden sugerido: 0 → 1 (para cuando llegue la mercadería) → 3 (ya hay gastos) → 2 y 4 (antes de abrir) → 5 y 6 (primera semana con la tienda abierta) → 7.
 
@@ -102,9 +102,13 @@ Modelo: `employees` (PIN hasheado, tarifa por hora), `time_entries`, `pay_period
 3. Regla de parada: caja objetivo por mes (1 a 12); rojo si está más de $20,000 por debajo.
 4. Export contable por rango de fechas.
 
-## Fase 7 — Extras
+## Fase 7 — Extras ✅
 
-Inventario físico por escaneo, garantías y reparaciones, spot del oro, metas por vendedora, backups semanales.
+- Conteo físico con la cámara del celular (o lector USB), diferencias y ajuste de stock.
+- Garantías y reparaciones por SKU vendido.
+- Spot del oro diario (api.gold-api.com o manual): valor a metal del inventario y aviso si el costo por gramo de compra se aleja más del 10 %.
+- Ventas por vendedora por período (staff del POS) contra una meta.
+- Backup semanal de la base al bucket privado `backups`, con descarga desde Configuración.
 
 ---
 

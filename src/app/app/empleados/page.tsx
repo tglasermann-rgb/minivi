@@ -71,7 +71,7 @@ export default async function EmpleadosPage({ searchParams }: { searchParams: Pr
                     <TableCell>{e.name}{e.phone && <span className="block text-xs text-muted-foreground">{e.phone}</span>}</TableCell>
                     <TableCell className="text-right font-mono text-xs">{formatCents(e.hourlyRateCents)}</TableCell>
                     <TableCell><Badge variant={e.active ? "success" : "outline"}>{e.active ? "activa" : "inactiva"}</Badge></TableCell>
-                    <TableCell className="text-right"><EmployeeDialog employee={{ id: e.id, name: e.name, hourlyRate: (e.hourlyRateCents / 100).toFixed(2), hiredOn: e.hiredOn ? e.hiredOn.toISOString().slice(0, 10) : "", active: e.active, phone: e.phone ?? "", email: e.email ?? "", notes: e.notes ?? "", pin: "" }} /></TableCell>
+                    <TableCell className="text-right"><EmployeeDialog employee={{ id: e.id, name: e.name, hourlyRate: (e.hourlyRateCents / 100).toFixed(2), hiredOn: e.hiredOn ? e.hiredOn.toISOString().slice(0, 10) : "", active: e.active, phone: e.phone ?? "", email: e.email ?? "", notes: e.notes ?? "", pin: "", shopifyStaffName: e.shopifyStaffName ?? "" }} /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
