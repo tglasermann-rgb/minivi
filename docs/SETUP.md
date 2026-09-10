@@ -49,6 +49,10 @@ Versión paso a paso sin comandos: [`docs/GUIA-FACIL.md`](GUIA-FACIL.md).
 3. El build en Vercel (`vercel.json` → `npm run build:vercel`) corre `prisma migrate deploy` antes de `next build`, así las migraciones nuevas se aplican solas en cada deploy. Necesita `DIRECT_URL`.
 4. En Supabase → **Authentication → URL Configuration**: agregar la URL de Vercel a "Site URL" y "Redirect URLs".
 
+## Buckets de Supabase Storage
+
+Se crean solos la primera vez que se usan: `product-images` (público, fotos de producto), `receipts` (privado, facturas de gastos), `purchase-docs` (privado), `clock-photos` (privado, fichaje), `backups` (privado) y `legal-docs` (privado, contratos y documentos).
+
 ## Diagnóstico
 
 `GET /api/health` (sin sesión) devuelve si la base responde, cuánto tarda, y qué variables de entorno están cargadas (sin exponer valores). Es lo primero que hay que mirar ante un "Application error".

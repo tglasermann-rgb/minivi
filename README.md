@@ -89,6 +89,16 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 4. **PDF del mes**: ventas por canal, margen, gastos por categoría vs plan, nómina, resultado y caja, con la regla de parada.
 5. **Ventas CSV / Gastos CSV / Nómina CSV**: exports del mes para el contador (también sirven por rango cambiando las fechas en la URL).
 
+## Legal: contratos y documentos
+
+Sección aparte del plan original, agregada para tener todo el papeleo en un solo lugar.
+
+1. **Legal** → **Nuevo documento**: título, categoría (alquiler, seguros, licencias, proveedores, empleados, sociedad, impuestos, banco), con quién, número de póliza o contrato, desde/vence, monto asociado y notas. Podés adjuntar el PDF o sacarle una foto al papel desde el celular.
+2. **Avisarme con X días**: cuando falte ese tiempo para el vencimiento, el documento aparece en Inicio. Para el alquiler conviene 90 días; para una póliza, 30.
+3. La lista marca en amarillo lo que está por vencer, en rojo lo vencido, y avisa cuáles no tienen el archivo subido.
+4. En la ficha se agregan o borran archivos. Los enlaces son privados y duran una hora.
+5. Un documento nunca se borra: se marca **terminado** y queda con su historial.
+
 ## Cómo probar la fase 7
 
 1. Inventario → **Conteo físico** → Nuevo conteo. Desde el celular, **Abrir cámara** y apuntá a las etiquetas: cada lectura suma 1. También sirve tipear el SKU o un lector USB. **Terminar conteo** → tabla de faltantes y sobrantes → **Ajustar stock**.

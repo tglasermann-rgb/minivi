@@ -660,3 +660,69 @@ model Backup {
 
   @@map("backups")
 }
+
+// ---------------------------------------------------------------------------
+// Legal — contratos y documentos
+// ---------------------------------------------------------------------------
+
+enum LegalCategory {
+  lease
+  insurance
+  license
+  supplier
+  employment
+  company
+  tax
+  bank
+  other
+}
+
+enum LegalStatus {
+  draft
+  active
+  expired
+  terminated
+}
+
+/// Contratos y documentos del negocio, con sus archivos en el bucket privado `legal-docs`.
+model LegalDocument {
+  id           String        @id @default(uuid()) @db.Uuid
+  title        String
+  category     LegalCategory
+  status       LegalStatus   @default(active)
+  /// Con quién: locador, aseguradora, proveedor, organismo…
+  counterparty String?
+  /// Número de póliza, licencia, contrato…
+  reference    String?
+  effectiveOn  DateTime?     @map("effective_on") @db.Date
+  expiresOn    DateTime?     @map("expires_on") @db.Date
+  /// Días de aviso previo para renovar o cancelar (aparece en Inicio).
+  noticeDays   Int           @default(30) @map("notice_days")
+  /// Monto asociado en centavos (renta mensual, prima, honorarios). 0 = sin monto.
+  amountCents  Int           @default(0) @map("amount_cents")
+  notes        String?
+  files        LegalFile[]
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy    String?       @map("created_by") @db.Uuid
+
+  @@index([category, status])
+  @@index([expiresOn])
+  @@map("legal_documents")
+}
+
+model LegalFile {
+  id          String        @id @default(uuid()) @db.Uuid
+  documentId  String        @map("document_id") @db.Uuid
+  document    LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  path        String
+  name        String
+  contentType String        @map("content_type")
+  sizeBytes   Int           @map("size_bytes")
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?       @map("created_by") @db.Uuid
+
+  @@index([documentId])
+  @@map("legal_files")
+}

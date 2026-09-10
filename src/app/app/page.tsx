@@ -12,6 +12,8 @@ import { Stat } from "@/components/ui/stat";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { safe } from "@/lib/safe";
+import { expiringDocuments } from "@/lib/legal/service";
+import { CATEGORY_LABELS, expiryLabel } from "@/lib/legal/expiry";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -20,13 +22,14 @@ export default async function HomePage() {
   const settings = await getSettings();
   const month = yearMonthOf(new Date(), settings.tienda_timezone);
   // Cada bloque se pide por separado: si uno falla, muestra vacío en vez de romper la pantalla.
-  const [payables, lastExpenses, inNow, report, stock, rule] = await Promise.all([
+  const [payables, lastExpenses, inNow, report, stock, rule, legal] = await Promise.all([
     safe("cuentas por pagar", () => upcomingPayables(7), [] as Awaited<ReturnType<typeof upcomingPayables>>),
     safe("últimos gastos", () => prisma.expense.findMany({ include: { category: true }, orderBy: [{ date: "desc" }, { createdAt: "desc" }], take: 5 }), []),
     safe("fichadas ahora", whoIsIn, [] as Awaited<ReturnType<typeof whoIsIn>>),
     safe("reporte del mes", () => monthReport(month), null),
     safe("stock", stockSnapshot, null),
     safe("regla de parada", stopRule, null),
+    safe("documentos legales", expiringDocuments, [] as Awaited<ReturnType<typeof expiringDocuments>>),
   ]);
   const timeFmt = new Intl.DateTimeFormat("es-US", { hour: "2-digit", minute: "2-digit", timeZone: settings.tienda_timezone });
   const stopRow = rule?.rows.find((x) => x.month === month);
@@ -46,6 +49,28 @@ export default async function HomePage() {
         <Stat label="Stock" value={stock ? `${stock.grams.toFixed(0)} g` : "—"} hint={stock ? `${stock.pieces} piezas · costo ${formatCents(stock.costCents)} · público ${formatCents(stock.priceCents)}` : undefined} />
         <Stat label="Regla de parada" value={stopRow && stopRow.status !== "future" ? formatCents(stopRow.deltaCents) : "—"} hint={stopRow && stopRow.status !== "future" ? `caja real ${formatCents(stopRow.cashCents)} vs objetivo ${formatCents(stopRow.targetCents)}` : "antes de la apertura"} className={stopRow?.status === "red" ? "border-destructive" : stopRow?.status === "warn" ? "border-oro" : ""} />
       </div>
+      {legal.length > 0 && (
+        <Card className={`mb-4 ${legal.some((x) => x.state === "vencido") ? "border-destructive/60" : "border-oro/60"}`}>
+          <CardHeader>
+            <CardTitle>Contratos y documentos por vencer</CardTitle>
+            <CardDescription>Renová o avisá a tiempo. <Link href="/app/legal" className="text-oro-profundo hover:underline">Ver todos</Link></CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="grid gap-1 text-sm">
+              {legal.map((x) => (
+                <li key={x.id} className="flex items-center justify-between gap-3 border-b py-1 last:border-0">
+                  <span className="flex min-w-0 items-center gap-2">
+                    {x.state === "vencido" ? <Badge variant="destructive">vencido</Badge> : <Badge variant="gold">{expiryLabel(x.days)}</Badge>}
+                    <Link href={`/app/legal/${x.id}`} className="truncate hover:underline">{x.title}</Link>
+                    <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{CATEGORY_LABELS[x.category]}</span>
+                  </span>
+                  {x.expiresOn && <span className="shrink-0 font-mono text-xs">{dateFmt.format(x.expiresOn)}</span>}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
       {payables.length > 0 && (
         <Card className="mb-4 border-oro/60">
           <CardHeader>

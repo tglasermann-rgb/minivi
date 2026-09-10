@@ -112,6 +112,16 @@ Modelo: `employees` (PIN hasheado, tarifa por hora), `time_entries`, `pay_period
 
 ---
 
+## Legal — contratos y documentos ✅
+
+Fuera del plan original, a pedido: un lugar para contratos, pólizas, licencias y todo papel del negocio.
+
+- `legal_documents` (título, categoría, estado, contraparte, referencia, vigencia, aviso previo, monto, notas) y `legal_files` (archivos en el bucket privado `legal-docs`, enlaces firmados por una hora).
+- Categorías pensadas para el negocio: alquiler del local, seguros, licencias y permisos, proveedores, empleados, sociedad (LLC), impuestos, banco y otros.
+- Aviso configurable por documento: aparece en Inicio cuando falta menos que el aviso previo, y en rojo si ya venció.
+- Lista con filtros por categoría, estado, texto y vencimiento; totales de por vencer, vencidos y sin archivo adjunto.
+- Los documentos no se borran: se marcan terminados. Todo cambio queda en `audit_log`.
+
 ## Reglas para todo el proyecto
 
 - Nunca borrar datos: archivar o marcar inactivo.
