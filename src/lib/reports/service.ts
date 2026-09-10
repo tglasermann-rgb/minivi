@@ -76,22 +76,45 @@ export async function monthReport(month: string): Promise<MonthReport> {
 
 export type StopRuleRow = { monthIndex: number; month: string; targetCents: number; flowCents: number; cashCents: number; deltaCents: number; status: "ok" | "warn" | "red" | "future" };
 
-/** Regla de parada: caja real acumulada (caja inicial + flujos) vs objetivo por mes del plan. */
+/**
+ * Regla de parada: caja real acumulada (caja inicial + caja de cada mes) vs objetivo.
+ * Cuatro consultas para los 12 meses y el reparto por mes se hace en memoria; antes
+ * era un reporte completo por mes (más de 70 consultas) y hacía lenta la pantalla.
+ */
 export async function stopRule(): Promise<{ rows: StopRuleRow[]; thresholdCents: number; initialCents: number; openingMonth: string }> {
   const s = await getSettings();
-  const targets = await prisma.cashTarget.findMany({ orderBy: { monthIndex: "asc" } });
   const now = yearMonthOf(new Date(), s.tienda_timezone);
+  const months = Array.from({ length: 12 }, (_, i) => addMonths(s.apertura_mes, i));
+  const from = monthRange(months[0]).start;
+  const to = monthRange(months[11]).end;
+  const monthOf = (d: Date) => d.toISOString().slice(0, 7);
+  const add = (m: Map<string, number>, key: string, n: number) => m.set(key, (m.get(key) ?? 0) + n);
+
+  const [targets, orders, expenses, periods, payables] = await Promise.all([
+    prisma.cashTarget.findMany({ orderBy: { monthIndex: "asc" } }),
+    prisma.order.findMany({ where: { placedAt: { gte: from, lt: to }, cancelledAt: null }, select: { placedAt: true, totalCents: true, refundedCents: true } }),
+    prisma.expense.findMany({ where: { date: { gte: from, lt: to } }, select: { date: true, amountCents: true, category: { select: { name: true } } } }),
+    prisma.payPeriod.findMany({ where: { startsOn: { gte: from, lt: to }, status: { not: "open" } }, select: { startsOn: true, lines: { select: { grossCents: true } } } }),
+    prisma.payable.findMany({ where: { paidOn: { gte: from, lt: to } }, select: { paidOn: true, amountCents: true } }),
+  ]);
+
+  const sales = new Map<string, number>(), spent = new Map<string, number>(), payroll = new Map<string, number>(), paid = new Map<string, number>();
+  for (const o of orders) add(sales, monthOf(o.placedAt), o.totalCents - o.refundedCents);
+  // La nómina entra por los períodos cerrados; la categoría "Nómina" se excluye para no contarla dos veces.
+  for (const e of expenses) if (e.category.name !== "Nómina") add(spent, monthOf(e.date), e.amountCents);
+  for (const p of periods) add(payroll, monthOf(p.startsOn), p.lines.reduce((a, l) => a + l.grossCents, 0));
+  for (const p of payables) if (p.paidOn) add(paid, monthOf(p.paidOn), p.amountCents);
+
   let cash = s.caja_inicial;
-  const rows: StopRuleRow[] = [];
-  for (let i = 1; i <= 12; i++) {
-    const month = addMonths(s.apertura_mes, i - 1);
+  const rows: StopRuleRow[] = months.map((month, idx) => {
+    const i = idx + 1;
     const target = targets.find((t) => t.monthIndex === i)?.targetCents ?? 0;
-    if (month > now) { rows.push({ monthIndex: i, month, targetCents: target, flowCents: 0, cashCents: cash, deltaCents: cash - target, status: "future" }); continue; }
-    const r = await monthReport(month);
-    cash += r.cashFlowCents;
+    if (month > now) return { monthIndex: i, month, targetCents: target, flowCents: 0, cashCents: cash, deltaCents: cash - target, status: "future" as const };
+    const flowCents = (sales.get(month) ?? 0) - (spent.get(month) ?? 0) - (payroll.get(month) ?? 0) - (paid.get(month) ?? 0);
+    cash += flowCents;
     const delta = cash - target;
-    rows.push({ monthIndex: i, month, targetCents: target, flowCents: r.cashFlowCents, cashCents: cash, deltaCents: delta, status: delta < -s.regla_parada_umbral ? "red" : delta < 0 ? "warn" : "ok" });
-  }
+    return { monthIndex: i, month, targetCents: target, flowCents, cashCents: cash, deltaCents: delta, status: delta < -s.regla_parada_umbral ? "red" : delta < 0 ? "warn" : "ok" };
+  });
   return { rows, thresholdCents: s.regla_parada_umbral, initialCents: s.caja_inicial, openingMonth: s.apertura_mes };
 }
 

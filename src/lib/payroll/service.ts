@@ -9,7 +9,7 @@ import { getSettings } from "@/lib/settings";
 import { signedUrl, uploadToBucket } from "@/lib/storage";
 import { toCsv } from "@/lib/csv";
 import { formatCents } from "@/lib/money";
-import { monthRange } from "@/lib/expenses/budget";
+import { monthRange, monthlyBudgetFor } from "@/lib/expenses/budget";
 import type { PayPeriod, PayPeriodLine, Employee } from "@/generated/prisma/client";
 import { computePayroll, grossCents } from "./calc";
 import { addDaysKey, dateKeyInTz, keyToUtc, periodFor, prevPeriod, utcToKey, weekStartOf, type Period } from "./periods";
@@ -253,17 +253,19 @@ export async function periodPdf(p: FullPeriod): Promise<Uint8Array> {
 
 /** Costo bruto de nómina por mes (períodos cerrados o pagados) vs presupuesto de la categoría "Nómina". */
 export async function payrollByMonth(months: string[]) {
-  const s = await getSettings();
-  const cat = await prisma.expenseCategory.findUnique({ where: { name: "Nómina" } });
-  const out: { month: string; grossCents: number; budgetCents: number }[] = [];
-  for (const m of months) {
-    const { start, end } = monthRange(m);
-    const periods = await prisma.payPeriod.findMany({ where: { startsOn: { gte: start, lt: end }, status: { not: "open" } }, include: { lines: { select: { grossCents: true } } } });
-    const grossCents = periods.reduce((sum, p) => sum + p.lines.reduce((a, l) => a + l.grossCents, 0), 0);
-    const { monthlyBudgetFor } = await import("@/lib/expenses/budget");
-    out.push({ month: m, grossCents, budgetCents: cat ? monthlyBudgetFor(cat, m, s.apertura_mes) : 0 });
+  if (months.length === 0) return [];
+  const [s, cat] = await Promise.all([getSettings(), prisma.expenseCategory.findUnique({ where: { name: "Nómina" } })]);
+  // Una sola consulta para todo el rango: una por mes hacía lenta la pantalla en serverless.
+  const periods = await prisma.payPeriod.findMany({
+    where: { startsOn: { gte: monthRange(months[0]).start, lt: monthRange(months[months.length - 1]).end }, status: { not: "open" } },
+    select: { startsOn: true, lines: { select: { grossCents: true } } },
+  });
+  const gross = new Map<string, number>();
+  for (const p of periods) {
+    const m = p.startsOn.toISOString().slice(0, 7);
+    gross.set(m, (gross.get(m) ?? 0) + p.lines.reduce((a, l) => a + l.grossCents, 0));
   }
-  return out;
+  return months.map((m) => ({ month: m, grossCents: gross.get(m) ?? 0, budgetCents: cat ? monthlyBudgetFor(cat, m, s.apertura_mes) : 0 }));
 }
 
 /** Ventas del POS por vendedora en un período (por shopify_staff_name), contra la meta. */

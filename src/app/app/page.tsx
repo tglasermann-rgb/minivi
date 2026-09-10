@@ -11,13 +11,25 @@ import { yearMonthOf, monthLabel } from "@/lib/expenses/budget";
 import { Stat } from "@/components/ui/stat";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { safe } from "@/lib/safe";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export default async function HomePage() {
-  const [settings, payables, lastExpenses, inNow] = await Promise.all([getSettings(), upcomingPayables(7), prisma.expense.findMany({ include: { category: true }, orderBy: [{ date: "desc" }, { createdAt: "desc" }], take: 5 }), whoIsIn()]);
-  const timeFmt = new Intl.DateTimeFormat("es-US", { hour: "2-digit", minute: "2-digit", timeZone: settings.tienda_timezone });
+  const settings = await getSettings();
   const month = yearMonthOf(new Date(), settings.tienda_timezone);
-  const [report, stock, rule] = await Promise.all([monthReport(month), stockSnapshot(), stopRule()]);
-  const stopRow = rule.rows.find((x) => x.month === month);
+  // Cada bloque se pide por separado: si uno falla, muestra vacío en vez de romper la pantalla.
+  const [payables, lastExpenses, inNow, report, stock, rule] = await Promise.all([
+    safe("cuentas por pagar", () => upcomingPayables(7), [] as Awaited<ReturnType<typeof upcomingPayables>>),
+    safe("últimos gastos", () => prisma.expense.findMany({ include: { category: true }, orderBy: [{ date: "desc" }, { createdAt: "desc" }], take: 5 }), []),
+    safe("fichadas ahora", whoIsIn, [] as Awaited<ReturnType<typeof whoIsIn>>),
+    safe("reporte del mes", () => monthReport(month), null),
+    safe("stock", stockSnapshot, null),
+    safe("regla de parada", stopRule, null),
+  ]);
+  const timeFmt = new Intl.DateTimeFormat("es-US", { hour: "2-digit", minute: "2-digit", timeZone: settings.tienda_timezone });
+  const stopRow = rule?.rows.find((x) => x.month === month);
   const today = new Date(); today.setUTCHours(0, 0, 0, 0);
   const dateFmt = new Intl.DateTimeFormat("es-US", { dateStyle: "medium", timeZone: "UTC" });
   return (
@@ -29,9 +41,9 @@ export default async function HomePage() {
       />
       <div className="mb-4"><WeeklyMetric compact /></div>
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label={`Caja de ${monthLabel(month)}`} value={formatCents(report.cashFlowCents)} hint="ventas − gastos − nómina − proveedores" className={report.cashFlowCents < 0 ? "border-destructive/50" : ""} />
-        <Stat label="Ventas netas del mes" value={formatCents(report.salesNetCents)} hint={`${report.salesOrders} órdenes · margen ${formatCents(report.marginCents)}`} />
-        <Stat label="Stock" value={`${stock.grams.toFixed(0)} g`} hint={`${stock.pieces} piezas · costo ${formatCents(stock.costCents)} · público ${formatCents(stock.priceCents)}`} />
+        <Stat label={`Caja de ${monthLabel(month)}`} value={report ? formatCents(report.cashFlowCents) : "—"} hint="ventas − gastos − nómina − proveedores" className={report && report.cashFlowCents < 0 ? "border-destructive/50" : ""} />
+        <Stat label="Ventas netas del mes" value={report ? formatCents(report.salesNetCents) : "—"} hint={report ? `${report.salesOrders} órdenes · margen ${formatCents(report.marginCents)}` : undefined} />
+        <Stat label="Stock" value={stock ? `${stock.grams.toFixed(0)} g` : "—"} hint={stock ? `${stock.pieces} piezas · costo ${formatCents(stock.costCents)} · público ${formatCents(stock.priceCents)}` : undefined} />
         <Stat label="Regla de parada" value={stopRow && stopRow.status !== "future" ? formatCents(stopRow.deltaCents) : "—"} hint={stopRow && stopRow.status !== "future" ? `caja real ${formatCents(stopRow.cashCents)} vs objetivo ${formatCents(stopRow.targetCents)}` : "antes de la apertura"} className={stopRow?.status === "red" ? "border-destructive" : stopRow?.status === "warn" ? "border-oro" : ""} />
       </div>
       {payables.length > 0 && (

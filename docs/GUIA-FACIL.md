@@ -93,6 +93,14 @@ Si algo de esto no pasa, sacale una captura de pantalla a lo que ves y mandámel
 
 ---
 
+## Si el portal muestra "Application error"
+
+Abrí **https://minivi.vercel.app/api/health**. Te dice en una línea si la base de datos responde y si falta alguna variable. Copiá lo que aparece y mandámelo: con eso se ve el problema exacto.
+
+Los dos casos más comunes:
+- **"NO RESPONDE"**: el proyecto de Supabase está pausado (entrá al panel de Supabase y apretá "Restore"), o la contraseña de la base cambió.
+- **"FALTA"** en alguna variable: cargala en Vercel → Settings → Environment Variables, marcá los tres entornos y hacé Redeploy.
+
 ## Si Vercel muestra un error rojo al desplegar
 
 Casi siempre es una de estas tres cosas:

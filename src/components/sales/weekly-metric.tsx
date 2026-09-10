@@ -2,12 +2,24 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCents } from "@/lib/money";
 import { weeklyUnits } from "@/lib/sales/stats";
+import { safe } from "@/lib/safe";
 
 const fmt = new Intl.DateTimeFormat("es-US", { day: "2-digit", month: "short", timeZone: "America/New_York" });
 
 /** La métrica central del plan: unidades vendidas por semana contra los escenarios y umbrales. */
 export async function WeeklyMetric({ compact = false }: { compact?: boolean }) {
-  const { weeks, thresholds } = await weeklyUnits(compact ? 6 : 10);
+  const data = await safe("ventas por semana", () => weeklyUnits(compact ? 6 : 10), null);
+  if (!data || data.weeks.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Ventas por semana</CardTitle>
+          <CardDescription>Todavía no se pueden mostrar. Conectá Shopify (docs/SETUP-SHOPIFY.md) y sincronizá las órdenes.</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+  const { weeks, thresholds } = data;
   const current = weeks[weeks.length - 1];
   const prev = weeks[weeks.length - 2];
   const max = Math.max(thresholds.optimista, ...weeks.map((w) => w.units)) * 1.1;

@@ -49,6 +49,10 @@ Versión paso a paso sin comandos: [`docs/GUIA-FACIL.md`](GUIA-FACIL.md).
 3. El build en Vercel (`vercel.json` → `npm run build:vercel`) corre `prisma migrate deploy` antes de `next build`, así las migraciones nuevas se aplican solas en cada deploy. Necesita `DIRECT_URL`.
 4. En Supabase → **Authentication → URL Configuration**: agregar la URL de Vercel a "Site URL" y "Redirect URLs".
 
+## Diagnóstico
+
+`GET /api/health` (sin sesión) devuelve si la base responde, cuánto tarda, y qué variables de entorno están cargadas (sin exponer valores). Es lo primero que hay que mirar ante un "Application error".
+
 ## Comprobaciones
 
 ```bash
@@ -60,4 +64,5 @@ npm run typecheck && npm run test && npm run build
 - **Prisma 7** usa `prisma.config.ts` (la URL no va en `schema.prisma`) y el adapter `@prisma/adapter-pg`. El cliente se genera en `src/generated/prisma` (ignorado por git, se regenera en `npm install`/`build`).
 - **RLS** está activado en todas las tablas sin políticas: nadie puede leer datos por la API REST de Supabase con la anon key. El portal accede por Prisma como `postgres`.
 - **Roles**: el middleware (Edge) solo verifica que haya sesión; el rol se chequea en los layouts de `/app` (owner) y `/kiosk` (owner o kiosk) con Prisma.
+- **Conexiones**: en Vercel cada función abre su propio pool. Supabase (free) admite pocas conexiones, así que el pool va limitado a 2 (`DATABASE_POOL_MAX` lo cambia) con cierre de ociosas a los 10 s. Sin esto aparecen errores de "too many connections".
 - `.npmrc` tiene `legacy-peer-deps=true` por un conflicto de peers entre vitest y `@types/node`; Vercel lo respeta.

@@ -76,24 +76,35 @@ export async function summarize(r: { start: Date; end: Date }): Promise<Summary>
   };
 }
 
-/** Unidades vendidas por semana (últimas N semanas, la actual incluida) contra los umbrales del plan. */
+/**
+ * Unidades vendidas por semana (últimas N semanas, la actual incluida) contra los
+ * umbrales del plan. Una sola consulta para todo el rango: en serverless cada
+ * viaje a la base cuesta, y una consulta por semana hacía lenta la pantalla de Inicio.
+ */
 export async function weeklyUnits(weeks = 8) {
   const s = await getSettings();
   const { week, tz } = await ranges();
-  const out: { start: Date; end: Date; units: number; netCents: number; orders: number }[] = [];
-  for (let i = weeks - 1; i >= 0; i--) {
-    const ws = new TZDate(week.start, tz);
+  const ws = new TZDate(week.start, tz);
+  const buckets = Array.from({ length: weeks }, (_, idx) => {
+    const i = weeks - 1 - idx;
     const start = new TZDate(ws.getFullYear(), ws.getMonth(), ws.getDate() - 7 * i, tz);
     const end = new TZDate(start.getFullYear(), start.getMonth(), start.getDate() + 7, tz);
-    const orders = await prisma.order.findMany({ where: { placedAt: { gte: new Date(start.getTime()), lt: new Date(end.getTime()) }, cancelledAt: null }, include: { items: { select: { qty: true, refundedQty: true } } } });
-    out.push({
-      start: new Date(start.getTime()), end: new Date(end.getTime()), orders: orders.length,
-      units: orders.reduce((a, o) => a + o.items.reduce((b, i) => b + i.qty - i.refundedQty, 0), 0),
-      netCents: orders.reduce((a, o) => a + o.totalCents - o.refundedCents, 0),
-    });
+    return { start: new Date(start.getTime()), end: new Date(end.getTime()), orders: 0, units: 0, netCents: 0 };
+  });
+
+  const orders = await prisma.order.findMany({
+    where: { placedAt: { gte: buckets[0].start, lt: buckets[buckets.length - 1].end }, cancelledAt: null },
+    select: { placedAt: true, totalCents: true, refundedCents: true, items: { select: { qty: true, refundedQty: true } } },
+  });
+  for (const o of orders) {
+    const b = buckets.find((x) => o.placedAt >= x.start && o.placedAt < x.end);
+    if (!b) continue;
+    b.orders++;
+    b.units += o.items.reduce((a, i) => a + i.qty - i.refundedQty, 0);
+    b.netCents += o.totalCents - o.refundedCents;
   }
   return {
-    weeks: out,
+    weeks: buckets,
     thresholds: { base: s.ventas_semana_base, conservador: s.ventas_semana_conservador, optimista: s.ventas_semana_optimista, cubreGastos: s.ventas_semana_cubre_gastos, cubreGastosYBanco: s.ventas_semana_cubre_gastos_y_banco },
   };
 }
