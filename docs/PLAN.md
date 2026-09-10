@@ -8,7 +8,7 @@ Decisiones ya tomadas (no se vuelven a discutir): Shopify es la fuente de verdad
 |---|---|---|
 | 0 | Base del proyecto | ✅ Lista para probar |
 | 1 | Inventario, SKU, etiquetas y export | ✅ Lista para probar |
-| 2 | Compras | ✅ Lista para probar |
+| 2 | Compras (unificada con Inventario) | ✅ Lista para probar |
 | 3 | Gastos | ✅ Lista para probar |
 | 4 | Empleados, fichaje y nómina | ✅ Lista para probar |
 | 5 | Ventas (Shopify web, POS y TikTok) | ✅ Lista para probar |
@@ -24,7 +24,7 @@ Orden sugerido: 0 → 1 (para cuando llegue la mercadería) → 3 (ya hay gastos
 1. Next.js 15 (App Router, TypeScript estricto, Tailwind 4, ESLint) + componentes shadcn/ui: button, card, table, dialog, form, input, select, tabs, badge, sheet, toast (sonner), calendar, dropdown-menu, command, label, popover, separator, textarea.
 2. Supabase conectado (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `DIRECT_URL`). Prisma 7 con adapter `pg` contra la base de Supabase. `.env.example` documentado.
 3. Auth con Supabase (email + password). Tabla `profiles` con `role` (`owner` | `kiosk`). Middleware protege `/app/*` y `/kiosk/*` (sin sesión → `/login`); el rol se verifica en los layouts (`/app` solo owner; `/kiosk` owner o kiosk). Sin registro público. El perfil se crea solo en el primer login: `owner` si el email está en `OWNER_EMAILS`, si no `kiosk`.
-4. Layout con sidebar (Inicio, Compras, Inventario, Ventas, Gastos, Empleados, Reportes, Configuración), responsive (sheet en móvil). Logotipo en `public/logo.svg`, identidad en `docs/BRAND.md`.
+4. Layout con sidebar (Inicio, Inventario, Ventas, Gastos, Empleados, Legal, Reportes, Configuración), responsive (sheet en móvil). Logotipo en `public/logo.svg`, identidad en `docs/BRAND.md`.
 5. Tabla `settings` con valores iniciales: `precio_por_gramo=30000`, `redondeo_precio=500`, `costo_por_gramo_default=10000`, `kilataje_default=14k`, `semana_inicia=monday`, `overtime_umbral_horas=40`, `tienda_timezone=America/New_York`.
 6. Tabla `audit_log` + helper `audit(entity, id, before, after)` en `src/lib/audit.ts`.
 7. Página `/app` con tarjetas placeholder; `/app/configuracion` funcional.
@@ -52,10 +52,12 @@ Modelo: `products`, `product_images`, `stock_movements` (el stock es la suma de 
 
 ## Fase 2 — Compras ✅
 
+> Compras e Inventario se unificaron: la factura del proveedor y el alta de las piezas son una sola pantalla (`/app/inventario/entradas/nueva`). Ya no existe el paso de "recibir mercadería".
+
 Modelo: `suppliers`, `purchases`, `purchase_items`, `payables`, adjuntos en bucket `purchase-docs`.
 
 1. Orden de compra en PDF con logo.
-2. "Recibir mercadería": crea producto + `stock_movement` por línea; recepción parcial.
+2. Al guardar la entrada, cada pieza crea un producto (o repone uno existente) y su `stock_movement`. No hay paso de recepción: la mercadería se carga cuando ya llegó.
 3. Cuentas por pagar: vencimientos, marcar pagado, alerta a 7 días en Inicio.
 4. Costo promedio por gramo del inventario, ponderado por gramos.
 

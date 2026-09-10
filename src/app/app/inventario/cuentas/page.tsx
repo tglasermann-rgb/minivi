@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { ArrowLeftIcon } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
+import { InventarioNav } from "../section-nav";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Stat } from "@/components/ui/stat";
 import { Button } from "@/components/ui/button";
 import { formatCents } from "@/lib/money";
-import { listPayables } from "../queries";
-import { PayableRowActions } from "../[id]/detail-actions";
+import { listPayables } from "../entradas/queries";
+import { PayableRowActions } from "../entradas/[id]/detail-actions";
 
 export const metadata = { title: "Cuentas por pagar" };
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <div className="mb-2"><Link href="/app/compras" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeftIcon className="size-4" /> Compras</Link></div>
+      <InventarioNav />
       <PageHeader eyebrow="Compras" title="Cuentas por pagar" description="Cuotas generadas por las condiciones de pago de cada compra." />
       <div className="mb-4 grid grid-cols-3 gap-3">
         <Stat label="Pendiente total" value={formatCents(pendingCents)} />
@@ -32,7 +32,7 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
       </div>
       <div className="mb-3 flex gap-2">
         {(["pending", "paid", "all"] as const).map((k) => (
-          <Button key={k} asChild size="sm" variant={filter === k ? "default" : "outline"}><Link href={`/app/compras/cuentas?f=${k}`}>{k === "pending" ? "Pendientes" : k === "paid" ? "Pagadas" : "Todas"}</Link></Button>
+          <Button key={k} asChild size="sm" variant={filter === k ? "default" : "outline"}><Link href={`/app/inventario/cuentas?f=${k}`}>{k === "pending" ? "Pendientes" : k === "paid" ? "Pagadas" : "Todas"}</Link></Button>
         ))}
       </div>
       <div className="rounded-lg border bg-card">
@@ -45,7 +45,7 @@ export default async function CuentasPage({ searchParams }: { searchParams: Prom
               return (
                 <TableRow key={r.id}>
                   <TableCell className={`font-mono text-xs ${late ? "text-destructive" : ""}`}>{dateFmt.format(r.dueOn)}{late && " · vencida"}</TableCell>
-                  <TableCell className="font-mono text-xs"><Link href={`/app/compras/${r.purchaseId}`} className="text-oro-profundo hover:underline">PO-{String(r.purchase.number).padStart(4, "0")}</Link></TableCell>
+                  <TableCell className="font-mono text-xs"><Link href={`/app/inventario/entradas/${r.purchaseId}`} className="text-oro-profundo hover:underline">PO-{String(r.purchase.number).padStart(4, "0")}</Link></TableCell>
                   <TableCell>{r.purchase.supplier.name}</TableCell>
                   <TableCell className="text-right font-mono text-xs">{formatCents(r.amountCents)}</TableCell>
                   <TableCell className="text-xs">{r.paidOn ? <span className="text-emerald-700">{dateFmt.format(r.paidOn)}{r.method ? ` · ${r.method}` : ""}</span> : <span className="text-muted-foreground">pendiente</span>}</TableCell>

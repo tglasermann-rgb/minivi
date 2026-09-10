@@ -5,6 +5,10 @@ Portal interno para administrar MiniVi Jewelry LLC, una joyería de oro 14k a pr
 ## Reglas de negocio que nunca cambian
 - El precio de venta se calcula como gramos × precio por gramo (parámetro global, hoy $300/g), redondeado hacia arriba al múltiplo de $5. Se puede sobrescribir por pieza.
 - El costo se calcula como gramos × costo por gramo de la compra (hoy ~$100/g). Cada compra tiene su propio costo por gramo, que es la base.
+- La mercadería entra una sola vez: se carga la factura del proveedor (fecha, proveedor, número) y sus piezas en la misma pantalla, y al guardar quedan en inventario con SKU, precio y stock. No hay un paso aparte de "recibir" ni un alta de producto duplicada. Compras e Inventario son el mismo tab.
+- Cada pieza de una entrada es nueva o repone una que ya está en inventario. Reponer suma stock a la pieza existente y nunca crea un SKU nuevo; los gramos son los de esa pieza. Si el peso es distinto, es otra pieza y va como nueva.
+- Al reponer se elige si la pieza vieja conserva su costo y su precio, o si se actualiza al de esta compra. Actualizar pone el costo de esta factura y recalcula el precio con el precio por gramo de hoy; una pieza con precio manual conserva su precio. Lo ya vendido guarda el costo que tenía al momento de la venta, así que el margen histórico no cambia.
+- Las fechas de pago se ponen a mano en un calendario, una o varias, y tienen que sumar exactamente el total de la factura. No hay condiciones fijas tipo 30/60/90.
 - Cada línea de una compra tiene su propio "+": dólares por gramo que se suman a la base de esa compra. Base $95/g con +12 son $107/g. Los habituales son +0, +8, +10, +12 y +20, pero se puede escribir cualquiera. En una misma compra una pulsera puede ir a +10 y otra a +12. Si la línea tiene costo unitario manual, ese precio manda y el "+" no se aplica.
 - Nunca escribir "solid gold" en ningún texto que salga al público. Usar "real 14k gold", "stamped 14k", "no plating".
 - Shopify es la fuente de verdad de productos publicados, stock y ventas. El portal lee y escribe por Admin API; no inventa un segundo stock.

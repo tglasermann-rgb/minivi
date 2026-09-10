@@ -75,7 +75,7 @@ export default async function HomePage() {
         <Card className="mb-4 border-oro/60">
           <CardHeader>
             <CardTitle>Cuentas por pagar próximas</CardTitle>
-            <CardDescription>Vencen en los próximos 7 días o ya vencieron. <Link href="/app/compras/cuentas" className="text-oro-profundo hover:underline">Ver todas</Link></CardDescription>
+            <CardDescription>Vencen en los próximos 7 días o ya vencieron. <Link href="/app/inventario/cuentas" className="text-oro-profundo hover:underline">Ver todas</Link></CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="grid gap-1 text-sm">
@@ -84,7 +84,7 @@ export default async function HomePage() {
                   <span className="flex items-center gap-2">
                     {x.dueOn < today && <Badge variant="destructive">vencida</Badge>}
                     <span className="font-mono text-xs">{dateFmt.format(x.dueOn)}</span>
-                    <Link href={`/app/compras/${x.purchaseId}`} className="hover:underline">PO-{String(x.purchase.number).padStart(4, "0")} · {x.purchase.supplier.name}</Link>
+                    <Link href={`/app/inventario/entradas/${x.purchaseId}`} className="hover:underline">PO-{String(x.purchase.number).padStart(4, "0")} · {x.purchase.supplier.name}</Link>
                   </span>
                   <span className="font-mono">{formatCents(x.amountCents)}</span>
                 </li>

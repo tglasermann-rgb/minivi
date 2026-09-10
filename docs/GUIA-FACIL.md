@@ -75,7 +75,7 @@ Cuando estén los 6, hacé clic en **Deploy**.
 1. Vercel tarda 2 a 4 minutos. Cuando termina, aparecen fuegos artificiales y un botón **Visit** (o **Continue to Dashboard** y después la dirección del sitio).
 2. Hacé clic. Se abre el portal con la pantalla **Entrar**.
 3. Escribí el email y la contraseña que creaste en el paso 1c.
-4. Tenés que ver el menú: Inicio, Compras, Inventario, Ventas, Gastos, Empleados, Reportes, Configuración.
+4. Tenés que ver el menú: Inicio, Inventario, Ventas, Gastos, Empleados, Legal, Reportes, Configuración.
 
 La dirección va a ser algo como `https://minivi-xxxx.vercel.app`. Guardala: es tu portal. Funciona desde el celular también.
 

@@ -24,13 +24,13 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 
 ## Estado
 
-**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista. **Fase 3 — Gastos:** lista. **Fase 4 — Empleados y nómina:** lista. **Fase 5 — Ventas:** lista. **Fase 6 — Reportes:** lista. **Fase 7 — Extras:** lista para probar (conteo físico con cámara, garantías, precio del oro, metas por vendedora, backups semanales). **Todas las fases del plan están construidas.**
+**Fase 0 — Base:** lista. **Fase 1 — Inventario:** lista. **Fase 2 — Compras:** lista (unificada con Inventario). **Fase 3 — Gastos:** lista. **Fase 4 — Empleados y nómina:** lista. **Fase 5 — Ventas:** lista. **Fase 6 — Reportes:** lista. **Fase 7 — Extras:** lista para probar (conteo físico con cámara, garantías, precio del oro, metas por vendedora, backups semanales). **Todas las fases del plan están construidas.**
 
 ## Cómo probar la fase 0
 
 1. Sin instalar nada: seguir [`docs/GUIA-FACIL.md`](docs/GUIA-FACIL.md) (Supabase + Vercel). Con tu computadora: [`docs/SETUP.md`](docs/SETUP.md).
 2. `npm run dev` y abrir http://localhost:3000.
-3. Entrar con tu email y contraseña → tenés que ver `/app` con el menú (Inicio, Compras, Inventario, Ventas, Gastos, Empleados, Reportes, Configuración). Achicá la ventana o abrilo desde el celular: el menú pasa a un botón arriba a la izquierda.
+3. Entrar con tu email y contraseña → tenés que ver `/app` con el menú (Inicio, Inventario, Ventas, Gastos, Empleados, Legal, Reportes, Configuración). Achicá la ventana o abrilo desde el celular: el menú pasa a un botón arriba a la izquierda.
 4. Ir a **Configuración**, cambiar el precio por gramo (por ejemplo 300 → 310) y guardar. Tiene que aparecer el aviso "Configuración guardada" y una fila nueva en "Historial de cambios" con tu email, el valor anterior y el nuevo. Volver a Inicio: el subtítulo muestra el precio nuevo.
 5. Cerrar sesión desde el menú de usuario (abajo del sidebar) → vuelve a `/login`. Intentar abrir `/app` sin sesión → redirige a `/login`.
 6. Entrar con el usuario de la tablet (uno que **no** esté en `OWNER_EMAILS`) → va a `/kiosk` y no puede abrir `/app`.
@@ -48,12 +48,17 @@ Next.js 15 (App Router) · TypeScript estricto · Tailwind 4 + shadcn/ui · Supa
 
 ## Cómo probar la fase 2
 
-1. Compras → **Proveedores** → **Nuevo proveedor**.
-2. Compras → **Nueva compra**: costo por gramo 100 (es la base), condiciones 30/60/90, 20 líneas (o menos, con cantidad). En cada línea, **+ por g** son los dólares que se suman a la base de esa compra: una línea en +12 sale a 112/g y otra en +0 queda en 100/g. Bajo el total de cada línea se ve a cuánto quedó el gramo. Abajo se ven el total y las tres cuotas con fecha. Crear.
-3. En la ficha: **PDF** abre la orden con el logo para mandar al proveedor. **Estado → Pedida**.
-4. **Recibir mercadería**: confirmá las cantidades. Aparecen los SKU en cada línea; en Inventario están los productos con precio automático y stock. Probá recibir parcial primero (menos unidades) y después el resto.
-5. **Cuentas por pagar**: tres cuotas pendientes; marcá una como pagada. En Inicio aparecen las que vencen en 7 días.
-6. Reportes: costo promedio por gramo del inventario, ponderado por gramos.
+Compras e Inventario son un solo lugar: la mercadería se carga una vez y queda en stock.
+
+1. Inventario → **Proveedores** → **Nuevo proveedor**.
+2. Inventario → **Cargar mercadería**: fecha, proveedor, número de factura y costo por gramo 100 (es la base de esta factura).
+3. Cargá una pieza en **Primera vez**: pide lo mismo que el alta de un producto (título, tipo, subcategoría, kilataje, gramos, talla o largo, tags, descripción) más la cantidad y el **+ por gramo**. El precio al público se calcula solo con los gramos. Agregá otra pieza con un "+" distinto: una en +12 sale a 112/g y otra en +0 queda en 100/g. Bajo el total de cada pieza se ve a cuánto quedó el gramo.
+4. En **Cuándo pagás** ponés las fechas en las que tenés que pagarle al proveedor. Con una sola fecha el monto sigue al total solo; si querés dividir, agregás otra y los montos tienen que sumar el total exacto.
+5. **Guardar entrada** → las piezas ya están en Inventario con SKU, precio y stock, y las fechas están en Cuentas por pagar. No hay que cargar nada dos veces ni confirmar una recepción.
+6. Volvé a **Cargar mercadería** y probá **Reponer**: buscá por SKU o por título una pieza que acabás de crear, poné 3 unidades y un "+" distinto. El stock de esa pieza sube y no aparece un SKU nuevo. Marcá o desmarcá **Actualizar al de esta compra** para decidir si la pieza vieja toma el costo y el precio nuevos.
+7. En la ficha de la entrada: **PDF** abre la orden con el logo para mandarle al proveedor, y podés adjuntar la factura escaneada.
+8. **Cuentas por pagar**: marcá una fecha como pagada. En Inicio aparecen las que vencen en 7 días.
+9. Reportes: costo promedio por gramo del inventario, ponderado por gramos.
 
 ## Cómo probar la fase 3
 

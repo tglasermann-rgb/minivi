@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { saveSupplierAction } from "../actions";
+import { saveSupplierAction } from "../entradas/actions";
 
 type S = { id: string; name: string; contact: string; paymentTerms: string; notes: string; active: boolean };
 

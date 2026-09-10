@@ -1,9 +1,8 @@
-import Link from "next/link";
-import { ArrowLeftIcon } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
+import { InventarioNav } from "../section-nav";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { listSuppliers } from "../queries";
+import { listSuppliers } from "../entradas/queries";
 import { SupplierDialog } from "./supplier-dialog";
 
 export const metadata = { title: "Proveedores" };
@@ -13,7 +12,7 @@ export default async function ProveedoresPage() {
   const rows = await listSuppliers(false);
   return (
     <>
-      <div className="mb-2"><Link href="/app/compras" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeftIcon className="size-4" /> Compras</Link></div>
+      <InventarioNav />
       <PageHeader eyebrow="Compras" title="Proveedores" actions={<SupplierDialog />} />
       <div className="rounded-lg border bg-card">
         <Table>

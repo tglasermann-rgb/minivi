@@ -56,7 +56,7 @@ describe.skipIf(!url)("viajes a la base por pantalla", () => {
   it("ninguna pantalla se pasa de un puñado de consultas", { timeout: 180000 }, async () => {
     const { getSettings } = await import("@/lib/settings");
     const { listProducts } = await import("@/app/app/inventario/queries");
-    const { listPurchases, listPayables } = await import("@/app/app/compras/queries");
+    const { listPurchases, listPayables } = await import("@/app/app/inventario/entradas/queries");
     const { listCategories, listExpensesByMonth, expectedRecurring, openingSummary, monthlyMatrix } = await import("@/lib/expenses/service");
     const { previewPeriod, currentPeriod, whoIsIn, listPeriods, payrollByMonth, salesByEmployee } = await import("@/lib/payroll/service");
     const { ranges, summarize } = await import("@/lib/sales/stats");
@@ -73,7 +73,7 @@ describe.skipIf(!url)("viajes a la base por pantalla", () => {
       await Promise.all([getSettings(), weeklyUnits(6), monthReport(month), stockSnapshot(), stopRule()]);
     });
     const inventario = await count("Inventario", () => listProducts({}));
-    const compras = await count("Compras", () => listPurchases());
+    const entradas = await count("Entradas", () => listPurchases());
     const cuentas = await count("Cuentas por pagar", () => listPayables("pending"));
     const gastos = await count("Gastos", async () => {
       await Promise.all([listCategories(), listExpensesByMonth(month), expectedRecurring(month)]);
@@ -96,7 +96,7 @@ describe.skipIf(!url)("viajes a la base por pantalla", () => {
     const legal = await count("Legal", () => listDocuments({}));
 
     // Con la base lejos, cada consulta cuesta ~60 ms: más de 20 por pantalla se nota.
-    for (const [nombre, n] of Object.entries({ inicio, inventario, compras, cuentas, gastos, apertura, mensual, empleados, nomina, ventas, reportes, legal })) {
+    for (const [nombre, n] of Object.entries({ inicio, inventario, entradas, cuentas, gastos, apertura, mensual, empleados, nomina, ventas, reportes, legal })) {
       expect(n, `${nombre} hace demasiadas consultas`).toBeLessThanOrEqual(20);
     }
   });

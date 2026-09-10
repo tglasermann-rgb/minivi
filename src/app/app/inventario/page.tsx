@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PlusIcon, ScanBarcodeIcon } from "lucide-react";
+import { PackagePlusIcon, PlusIcon, ScanBarcodeIcon } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Stat } from "@/components/ui/stat";
@@ -7,6 +7,7 @@ import { formatCents } from "@/lib/money";
 import { listProducts, type InventoryFilters } from "./queries";
 import { InventoryFiltersBar } from "./filters";
 import { ProductTable } from "./product-table";
+import { InventarioNav } from "./section-nav";
 
 export const metadata = { title: "Inventario" };
 export const dynamic = "force-dynamic";
@@ -26,14 +27,16 @@ export default async function InventarioPage({ searchParams }: { searchParams: P
 
   return (
     <>
+      <InventarioNav />
       <PageHeader
         eyebrow="Inventario"
         title="Productos"
-        description="El stock es la suma de movimientos. Shopify es la fuente de verdad de lo publicado."
+        description="Cada pieza con su SKU, precio y stock. Para sumar mercadería, cargá la factura del proveedor y las piezas entran solas."
         actions={
           <>
             <Button asChild variant="outline"><Link href="/app/inventario/conteo"><ScanBarcodeIcon /> Conteo físico</Link></Button>
-            <Button asChild variant="gold"><Link href="/app/inventario/nuevo"><PlusIcon /> Nuevo producto</Link></Button>
+            <Button asChild variant="outline"><Link href="/app/inventario/nuevo"><PlusIcon /> Pieza suelta</Link></Button>
+            <Button asChild variant="gold"><Link href="/app/inventario/entradas/nueva"><PackagePlusIcon /> Cargar mercadería</Link></Button>
           </>
         }
       />
